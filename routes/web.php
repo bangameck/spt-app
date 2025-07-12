@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\FieldCoordinatorController;
 use App\Http\Controllers\MasterData\RoadSectionController;
 use App\Http\Controllers\MasterData\ParkingLocationController;
 use App\Http\Controllers\MasterData\AgreementController;
+use App\Http\Controllers\MasterData\DepositTransactionController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -69,13 +70,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('agreements.detach-parking-location');
         // END: Route untuk mengeluarkan lokasi parkir dari perjanjian
 
+        // Routes untuk Manajemen Transaksi Setoran
+        Route::resource('deposit-transactions', DepositTransactionController::class);
+
+        // Route untuk validasi setoran (bisa diakses Admin/Leader)
+        Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
+            ->name('deposit-transactions.validate');
+
         // Route AJAX untuk mengambil lokasi parkir berdasarkan ruas jalan
         Route::get('get-parking-locations-by-road-section/{roadSectionId}', [ParkingLocationController::class, 'getParkingLocationsByRoadSection'])
             ->name('get-parking-locations-by-road-section');
 
+        // Routes untuk Manajemen Transaksi Setoran
+        Route::resource('deposit-transactions', DepositTransactionController::class);
+
+        // Route untuk validasi setoran (bisa diakses Admin/Leader)
+        Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
+            ->name('deposit-transactions.validate');
+
+        // START: Route AJAX untuk pencarian perjanjian aktif (untuk Select2)
+        Route::get('search-active-agreements', [DepositTransactionController::class, 'searchActiveAgreements'])
+            ->name('search-active-agreements');
+        // END: Route AJAX untuk pencarian perjanjian aktif
+
         // START: Route untuk Generate PDF Perjanjian (Ini yang ditambahkan/dipastikan ada)
         Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'generatePdf'])->name('agreements.pdf');
         // END: Route untuk Generate PDF Perjanjian
+
     });
     // END: ROUTES BARU UNTUK ADMIN DAN STAFF (MasterData)
 

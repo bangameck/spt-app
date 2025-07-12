@@ -15,7 +15,7 @@ class DepositTransaction extends Model
         'deposit_date',
         'amount',
         'is_validated',
-        'validated_date',
+        'validation_date', // <-- UBAH INI
         'notes',
         'created_by_user_id',
     ];
@@ -24,7 +24,7 @@ class DepositTransaction extends Model
         'deposit_date' => 'date',
         'amount' => 'decimal:2',
         'is_validated' => 'boolean',
-        'validation_date' => 'date',
+        'validation_date' => 'datetime', // <-- UBAH INI (dan pastikan tipe castnya datetime, bukan date)
     ];
 
     // Relasi ke Agreement
@@ -36,6 +36,6 @@ class DepositTransaction extends Model
     // Relasi ke User Creator
     public function creator()
     {
-        return $this->belongsTo(User::class, 'create_by_user_id');
+        return $this->belongsTo(User::class, 'created_by_user_id');
     }
 }
