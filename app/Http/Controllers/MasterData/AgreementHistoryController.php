@@ -8,6 +8,8 @@ use App\Models\Agreement; // Diperlukan untuk eager load dan filter
 use App\Models\FieldCoordinator; // Untuk menampilkan nama korlap di Select2
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Leader;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AgreementHistoryController extends Controller
 {
