@@ -3,75 +3,66 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Arr;
 use App\Models\Agreement;
 use App\Models\Leader;
 use App\Models\FieldCoordinator;
 use App\Models\ParkingLocation;
 use App\Models\RoadSection;
+use App\Models\AgreementHistory;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class AgreementController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan daftar perjanjian.
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
-
-        // Menggunakan relasi activeParkingLocations untuk pencarian agar lebih relevan
-        $query = Agreement::with(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection']);
+        $query = Agreement::with(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('agreement_number', 'like', '%' . $search . '%')
                     ->orWhere('status', 'like', '%' . $search . '%')
-                    ->orWhereHas('leader.user', function ($leaderUserQuery) use ($search) {
-                        $leaderUserQuery->where('name', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('fieldCoordinator.user', function ($fcUserQuery) use ($search) {
-                        $fcUserQuery->where('name', 'like', '%' . $search . '%');
-                    })
-                    // Pencarian kini dilakukan pada lokasi yang aktif saja
-                    ->orWhereHas('activeParkingLocations', function ($plQuery) use ($search) {
-                        $plQuery->where('name', 'like', '%' . $search . '%')
-                            ->orWhereHas('roadSection', function ($rsQuery) use ($search) {
-                                $rsQuery->where('name', 'like', '%' . $search . '%');
-                            });
-                    });
+                    ->orWhereHas('leader.user', fn($subq) => $subq->where('name', 'like', '%' . $search . '%'))
+                    ->orWhereHas('fieldCoordinator.user', fn($subq) => $subq->where('name', 'like', '%' . $search . '%'));
             });
         }
 
         $agreements = $query->latest()->paginate(10);
-
         return view('staff.agreements.index', compact('agreements', 'search'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Menampilkan form untuk membuat perjanjian baru.
      */
     public function create()
     {
         $leaders = Leader::with('user')->get();
-        $fieldCoordinators = FieldCoordinator::with('user')->get();
         $roadSections = RoadSection::orderBy('name')->get();
+        $availableParkingLocations = ParkingLocation::where('status', 'tersedia')->with('roadSection')->get();
 
-        $availableParkingLocations = ParkingLocation::where('status', 'tersedia')
+        // --- PERUBAHAN DI SINI ---
+        // Ambil hanya koordinator yang tidak memiliki perjanjian 'active'
+        $fieldCoordinators = FieldCoordinator::with('user')
             ->whereDoesntHave('agreements', function ($query) {
-                $query->where('agreement_parking_locations.status', 'active');
+                $query->where('status', 'active');
             })
-            ->with('roadSection')
             ->get();
+        // --- AKHIR PERUBAHAN ---
 
         return view('staff.agreements.create', compact('leaders', 'fieldCoordinators', 'roadSections', 'availableParkingLocations'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan perjanjian baru ke database.
      */
     public function store(Request $request)
     {
@@ -112,69 +103,33 @@ class AgreementController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     * ---
-     * ✅ DIPERBARUI: Menggunakan relasi activeParkingLocations
-     * ---
+     * Menampilkan detail satu perjanjian.
      */
     public function show(Agreement $agreement)
     {
-        $agreement->load([
-            'leader.user',
-            'fieldCoordinator.user',
-            'activeParkingLocations.roadSection', // <-- Mengambil lokasi aktif
-            'depositTransactions',
-            'histories'
-        ]);
+        $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection', 'depositTransactions', 'histories']);
         return view('staff.agreements.show', compact('agreement'));
     }
 
     /**
-     * Generate PDF for the specified agreement.
-     * ---
-     * ✅ DIPERBARUI: Menggunakan relasi activeParkingLocations
-     * ---
-     */
-    public function generatePdf(Agreement $agreement)
-    {
-        $agreement->load([
-            'leader.user',
-            'fieldCoordinator.user',
-            'activeParkingLocations.roadSection' // <-- Mengambil lokasi aktif
-        ]);
-        $pdf = Pdf::loadView('pdf.agreement', compact('agreement'));
-        return $pdf->stream('Perjanjian_Kerjasama_' . $agreement->agreement_number . '.pdf');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
+     * Menampilkan form untuk mengedit perjanjian.
      */
     public function edit(Agreement $agreement)
     {
         $leaders = Leader::with('user')->get();
         $fieldCoordinators = FieldCoordinator::with('user')->get();
         $roadSections = RoadSection::orderBy('name')->get();
-
-        // Mengambil semua lokasi yang statusnya 'tersedia' ATAU yang sudah aktif di perjanjian ini
         $availableParkingLocations = ParkingLocation::where('status', 'tersedia')
             ->orWhereHas('agreements', function ($query) use ($agreement) {
-                $query->where('agreement_parking_locations.agreement_id', $agreement->id)
-                    ->where('agreement_parking_locations.status', 'active');
-            })
-            ->with('roadSection')
-            ->get();
-
-        // Mengambil ID lokasi yang saat ini aktif di perjanjian ini untuk pre-select checkbox
-        $currentParkingLocationIds = $agreement->activeParkingLocations->pluck('id')->toArray();
+                $query->where('agreement_parking_locations.agreement_id', $agreement->id);
+            })->with('roadSection')->get();
+        $currentParkingLocationIds = $agreement->activeParkingLocations()->pluck('parking_locations.id')->toArray();
 
         return view('staff.agreements.edit', compact('agreement', 'leaders', 'fieldCoordinators', 'roadSections', 'availableParkingLocations', 'currentParkingLocationIds'));
     }
 
     /**
-     * Update the specified resource in storage.
-     * ---
-     * ✅ DIPERBARUI: Logika update yang lebih robust
-     * ---
+     * Update data perjanjian di database.
      */
     public function update(Request $request, Agreement $agreement)
     {
@@ -193,54 +148,63 @@ class AgreementController extends Controller
 
         DB::beginTransaction();
         try {
-            // 1. Update data utama perjanjian
             $agreement->update($validatedData);
 
-            // 2. Ambil ID dari form dan semua ID yang pernah terkait dengan agreement ini
             $newLocationIds = $validatedData['parking_location_ids'] ?? [];
             $allRelatedLocations = $agreement->parkingLocations()->get()->keyBy('id');
             $currentActiveLocationIds = $agreement->activeParkingLocations()->pluck('parking_locations.id')->toArray();
 
-            // 3. Tentukan lokasi yang akan dinonaktifkan (dihilangkan centangnya)
+            // Tentukan lokasi yang akan dinonaktifkan (dihilangkan centangnya)
             $locationsToDeactivate = array_diff($currentActiveLocationIds, $newLocationIds);
             if (!empty($locationsToDeactivate)) {
-                foreach ($locationsToDeactivate as $locationId) {
-                    $agreement->parkingLocations()->updateExistingPivot($locationId, [
+                // Ambil detail lokasi untuk loop
+                $deactivatedLocationsDetails = ParkingLocation::whereIn('id', $locationsToDeactivate)->get();
+
+                foreach ($deactivatedLocationsDetails as $location) {
+                    // 1. Nonaktifkan relasi di pivot
+                    $agreement->parkingLocations()->updateExistingPivot($location->id, [
                         'status' => 'inactive',
                         'removed_date' => now(),
                     ]);
+
+                    // 2. ✅ LOGIKA RIWAYAT PINDAH KE SINI
+                    AgreementHistory::create([
+                        'agreement_id' => $agreement->id,
+                        'event_type' => 'location_removed',
+                        'changed_by_user_id' => Auth::id(),
+                        'notes' => 'Lokasi parkir "' . $location->name . '" dikeluarkan dari perjanjian.',
+                        'old_value' => json_encode(['id' => $location->id, 'name' => $location->name]),
+                    ]);
                 }
+                // 3. Update status di tabel utama setelah loop selesai
                 ParkingLocation::whereIn('id', $locationsToDeactivate)->update(['status' => 'tersedia']);
             }
 
-            // 4. Proses lokasi yang dicentang di form
+            // Proses lokasi yang dicentang di form
             $attachData = [];
             foreach ($newLocationIds as $locationId) {
-                // Cek apakah lokasi ini sudah pernah terhubung sebelumnya
                 if (isset($allRelatedLocations[$locationId])) {
-                    // Jika ya, dan statusnya inactive, aktifkan kembali (UPDATE)
                     if ($allRelatedLocations[$locationId]->pivot->status === 'inactive') {
                         $agreement->parkingLocations()->updateExistingPivot($locationId, [
                             'status' => 'active',
                             'assigned_date' => now(),
-                            'removed_date' => null, // Hapus tanggal remove
+                            'removed_date' => null,
                         ]);
                     }
                 } else {
-                    // Jika belum pernah terhubung sama sekali, tandai untuk ditambah (INSERT)
                     $attachData[$locationId] = ['status' => 'active', 'assigned_date' => now()];
                 }
             }
 
-            // 5. Tambahkan lokasi yang benar-benar baru
             if (!empty($attachData)) {
                 $agreement->parkingLocations()->attach($attachData);
             }
 
-            // 6. Update status semua lokasi yang aktif menjadi 'tidak_tersedia'
             if (!empty($newLocationIds)) {
                 ParkingLocation::whereIn('id', $newLocationIds)->update(['status' => 'tidak_tersedia']);
             }
+
+            // HAPUS BLOK RIWAYAT YANG LAMA DARI SINI
 
             DB::commit();
 
@@ -248,38 +212,34 @@ class AgreementController extends Controller
                 ->with('success', 'Perjanjian "' . $agreement->agreement_number . '" berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('AgreementController@update: ' . $e->getMessage(), ['exception' => $e]);
-            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui perjanjian: ' . $e->getMessage());
+            Log::error('AgreementController@update: Error updating agreement: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal memperbarui perjanjian. Terjadi kesalahan internal.');
         }
     }
+
+
     /**
-     * Remove the specified resource from storage.
+     * Menghapus perjanjian (soft delete).
      */
     public function destroy(Agreement $agreement)
     {
         DB::beginTransaction();
         try {
-            // Ubah status semua lokasi aktif yang terkait sebelum menghapus perjanjian
-            $activeLocationIds = $agreement->activeParkingLocations()->pluck('parking_locations.id')->toArray();
+            $activeLocationIds = $agreement->parkingLocations()->pluck('parking_locations.id')->toArray();
             if (!empty($activeLocationIds)) {
                 ParkingLocation::whereIn('id', $activeLocationIds)->update(['status' => 'tersedia']);
             }
-
-            $agreement->delete(); // Ini akan soft delete karena ada trait di model
-
+            $agreement->delete();
             DB::commit();
 
             return redirect()->route('masterdata.agreements.index')->with('success', 'Perjanjian berhasil dihapus!');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('AgreementController@destroy: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Gagal menghapus perjanjian: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Gagal menghapus perjanjian.');
         }
     }
 
-    /**
-     * Detach a specific parking location from an agreement.
-     */
     public function detachParkingLocation(Agreement $agreement, ParkingLocation $parkingLocation)
     {
         DB::beginTransaction();
@@ -301,5 +261,15 @@ class AgreementController extends Controller
             Log::error('Error detaching parking location: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', 'Gagal mengeluarkan lokasi parkir: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Generate PDF untuk perjanjian.
+     */
+    public function generatePdf(Agreement $agreement)
+    {
+        $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection']);
+        $pdf = Pdf::loadView('pdf.agreement', compact('agreement'));
+        return $pdf->stream('Perjanjian_' . $agreement->agreement_number . '.pdf');
     }
 }

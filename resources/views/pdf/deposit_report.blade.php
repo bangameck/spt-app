@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <title>Laporan Setoran - {{ $reportTitle }}</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                /* Menggunakan Arial */
+                margin: 1cm;
+                padding: 0;
+                font-size: 10pt;
+                line-height: 1.5;
+            }
+
+            .container {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 16pt;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .header h2 {
+                font-size: 14pt;
+                font-weight: normal;
+            }
+
+            .header h3 {
+                /* Added style for the new search filter line */
+                font-size: 12pt;
+                font-weight: normal;
+                margin-top: 5px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+
+            th,
+            td {
+                border: 1px solid black;
+                padding: 8px;
+                text-align: left;
+            }
+
+            th {
+                background-color: #f2f2f2;
+                font-weight: bold;
+                text-transform: uppercase;
+            }
+
+            .text-right {
+                text-align: right;
+            }
+
+            .text-center {
+                text-align: center;
+            }
+
+            .total-row {
+                background-color: #e0e0e0;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Laporan Transaksi Setoran</h1>
+                <h2>{{ $reportTitle }}</h2>
+                {{-- Display combined or individual search/filter terms --}}
+                @if (isset($search) && $search && isset($fieldCoordinatorId) && $fieldCoordinatorId)
+                    <h3>Filter: "{{ $search }}" (Untuk Koordinator:
+                        {{ \App\Models\FieldCoordinator::find($fieldCoordinatorId)->user->name ?? 'N/A' }})</h3>
+                @elseif(isset($search) && $search)
+                    <h3>Filter Pencarian: "{{ $search }}"</h3>
+                @elseif(isset($fieldCoordinatorId) && $fieldCoordinatorId)
+                    <h3>Untuk Koordinator:
+                        {{ \App\Models\FieldCoordinator::find($fieldCoordinatorId)->user->name ?? 'N/A' }}</h3>
+                @endif
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>No. Perjanjian</th>
+                        <th>Korlap</th>
+                        <th>Tanggal Setoran</th>
+                        <th>Status Deposit</th>
+                        <th>Catatan Deposit</th>
+                        <th class="text-right">Jumlah Setoran (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($reports as $report)
+                        <tr>
+                            <td>{{ $report->agreement->agreement_number ?? 'N/A' }}</td>
+                            <td>{{ $report->agreement->fieldCoordinator->user->name ?? 'N/A' }}</td>
+                            <td>{{ $report->deposit_date->format('d M Y') }}</td>
+                            <td>{{ $report->is_validated ? 'Divalidasi' : 'Belum Divalidasi' }}</td>
+                            <td>{{ $report->notes ?? '-' }}</td>
+                            <td class="text-right">Rp {{ number_format($report->amount, 0, ',', '.') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center">Tidak ada data setoran untuk filter ini.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="5" class="text-right">Total Setoran:</td>
+                        <td class="text-right">Rp {{ number_format($totalAmount, 0, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </body>
+
+</html>

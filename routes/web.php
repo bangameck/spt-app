@@ -10,6 +10,8 @@ use App\Http\Controllers\MasterData\RoadSectionController;
 use App\Http\Controllers\MasterData\ParkingLocationController;
 use App\Http\Controllers\MasterData\AgreementController;
 use App\Http\Controllers\MasterData\DepositTransactionController;
+use App\Http\Controllers\MasterData\DepositReportController;
+use App\Http\Controllers\MasterData\AgreementHistoryController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -77,6 +79,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
             ->name('deposit-transactions.validate');
 
+        // START: Route untuk Laporan Deposit
+        Route::get('deposit-reports', [DepositReportController::class, 'index'])->name('deposit-reports.index');
+        // END: Route untuk Laporan Deposit
+
+        // Pastikan nama route ini unik dan berbeda dari index
+        Route::get('deposit-reports/pdf', [DepositReportController::class, 'generatePdf'])->name('deposit-reports.pdf');
+        // END: Route untuk Laporan Deposit (Cetak PDF)
+
         // Route AJAX untuk mengambil lokasi parkir berdasarkan ruas jalan
         Route::get('get-parking-locations-by-road-section/{roadSectionId}', [ParkingLocationController::class, 'getParkingLocationsByRoadSection'])
             ->name('get-parking-locations-by-road-section');
@@ -96,6 +106,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // START: Route untuk Generate PDF Perjanjian (Ini yang ditambahkan/dipastikan ada)
         Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'generatePdf'])->name('agreements.pdf');
         // END: Route untuk Generate PDF Perjanjian
+
+        // START: Route untuk Riwayat Perjanjian
+        Route::get('agreement-histories', [AgreementHistoryController::class, 'index'])->name('agreement-histories.index');
+        // END: Route untuk Riwayat Perjanjian
+
+        // START: Route untuk Generate PDF Riwayat Perjanjian
+        Route::get('agreement-histories/{history}/pdf', [AgreementHistoryController::class, 'generatePdf'])->name('agreement-histories.pdf');
+        // END: Route untuk Generate PDF Riwayat Perjanjian
 
     });
     // END: ROUTES BARU UNTUK ADMIN DAN STAFF (MasterData)

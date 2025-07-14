@@ -175,9 +175,11 @@ class DepositTransactionController extends Controller
         $validatedData = $request->validate([
             'agreement_id' => [
                 'required',
-                'exists:agreements,id',
-                Rule::exists('agreements', 'id')->where(function ($query) {
-                    $query->where('status', 'active');
+                'exists:agreements,id', // Pastikan ID perjanjian ada
+                // Perbaikan di sini: Izinkan ID perjanjian saat ini, atau perjanjian baru yang aktif
+                Rule::exists('agreements', 'id')->where(function ($query) use ($depositTransaction) {
+                    $query->where('status', 'active') // Harus aktif
+                        ->orWhere('id', $depositTransaction->agreement_id); // ATAU ID perjanjian yang sedang terikat
                 }),
                 Rule::unique('deposit_transactions')->where(function ($query) use ($request) {
                     return $query->where('deposit_date', $request->deposit_date);

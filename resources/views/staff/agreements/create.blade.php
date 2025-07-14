@@ -70,8 +70,8 @@
                         <label for="field_coordinator_id"
                             class="block text-sm font-medium text-default-700 mb-2">Koordinator Lapangan (PIHAK
                             KEDUA)</label>
-                        <select name="field_coordinator_id" id="field_coordinator_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('field_coordinator_id') border-red-500 @enderror"
+                        {{-- 2. Tambahkan class 'select2' pada elemen select --}}
+                        <select name="field_coordinator_id" id="field_coordinator_id" class="form-select w-full select2"
                             required>
                             <option value="">Pilih Koordinator Lapangan</option>
                             @foreach ($fieldCoordinators as $fc)
@@ -276,8 +276,15 @@
             } else {
                 console.warn(
                     'Road section filter or parking location checkboxes container elements not found.'
-                    ); // Debugging
+                ); // Debugging
             }
+        });
+        $(document).ready(function() {
+            // Inisialisasi Select2 pada dropdown dengan class 'select2'
+            $('.select2').select2({
+                placeholder: "Pilih atau cari...",
+                allowClear: true
+            });
         });
     </script>
 @endpush

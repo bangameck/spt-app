@@ -145,8 +145,11 @@
                                                 Validasi
                                             </button>
                                         @endif
-                                        <a href="{{ route('masterdata.deposit-transactions.edit', $transaction) }}"
-                                            class="font-medium text-blue-600 hover:underline">Edit</a>
+                                        {{-- Tombol Edit hanya jika belum divalidasi --}}
+                                        @if (!$transaction->is_validated)
+                                            <a href="{{ route('masterdata.deposit-transactions.edit', $transaction) }}"
+                                                class="font-medium text-blue-600 hover:underline">Edit</a>
+                                        @endif
                                         <form id="delete-form-deposit-transaction-{{ $transaction->id }}"
                                             action="{{ route('masterdata.deposit-transactions.destroy', $transaction->id) }}"
                                             method="POST" style="display: none;">

@@ -2,81 +2,50 @@
 
 @section('title', 'Edit Perjanjian: ' . $agreement->agreement_number)
 
+@push('styles')
+    {{-- Tambahkan CSS untuk Select2 jika belum ada di layout utama --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+@endpush
+
 @section('content')
     <div class="container-fluid">
         <div class="flex justify-between items-center mb-6">
             <h4 class="text-default-900 text-2xl font-bold">Edit Perjanjian: {{ $agreement->agreement_number }}</h4>
             <a href="{{ route('masterdata.agreements.index') }}"
                 class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar Perjanjian
+                Kembali ke Daftar
             </a>
         </div>
 
-        {{-- =============================================================== --}}
-        {{-- TAMBAHKAN BLOK INI UNTUK MENAMPILKAN PESAN SUKSES/ERROR         --}}
-        {{-- =============================================================== --}}
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Sukses!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Gagal!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
-            </div>
-        @endif
-        {{-- =============================================================== --}}
-        {{-- AKHIR DARI BLOK YANG DITAMBAHKAN                               --}}
-        {{-- =============================================================== --}}
-
-        {{-- Error Messages dari Laravel Validation --}}
+        {{-- Menampilkan Pesan Error Validasi --}}
         @if ($errors->any())
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">Ada beberapa masalah dengan input Anda.</span>
-                <ul class="mt-3 list-disc list-inside">
+                <strong class="font-bold">Oops! Terjadi Kesalahan.</strong>
+                <ul class="mt-2 list-disc list-inside">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
                     @endforeach
                 </ul>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
             </div>
         @endif
 
         <div class="card bg-white shadow rounded-lg p-6">
-            <form action="{{ route('masterdata.agreements.update', $agreement) }}" method="POST">
+            <form action="{{ route('masterdata.agreements.update', $agreement->id) }}" method="POST">
                 @csrf
-                @method('PUT') {{-- Penting: Gunakan method PUT untuk update --}}
+                @method('PUT')
 
                 <h5 class="text-lg font-semibold text-default-800 mb-4">Detail Perjanjian</h5>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="agreement_number" class="block text-sm font-medium text-default-700 mb-2">Nomor
                             Perjanjian</label>
-                        <input type="text" name="agreement_number" id="agreement_number"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('agreement_number') border-red-500 @enderror"
-                            value="{{ old('agreement_number', $agreement->agreement_number) }}"
-                            placeholder="Contoh: PKS-2025-001" required>
-                        @error('agreement_number')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        <input type="text" name="agreement_number" id="agreement_number" class="form-input w-full"
+                            value="{{ old('agreement_number', $agreement->agreement_number) }}" required>
                     </div>
                     <div>
                         <label for="leader_id" class="block text-sm font-medium text-default-700 mb-2">Pimpinan (PIHAK
                             PERTAMA)</label>
-                        <select name="leader_id" id="leader_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('leader_id') border-red-500 @enderror"
-                            required>
+                        <select name="leader_id" id="leader_id" class="form-select w-full select2" required>
                             <option value="">Pilih Pimpinan</option>
                             @foreach ($leaders as $leader)
                                 <option value="{{ $leader->id }}"
@@ -85,16 +54,12 @@
                                 </option>
                             @endforeach
                         </select>
-                        @error('leader_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                     <div>
                         <label for="field_coordinator_id"
                             class="block text-sm font-medium text-default-700 mb-2">Koordinator Lapangan (PIHAK
                             KEDUA)</label>
-                        <select name="field_coordinator_id" id="field_coordinator_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('field_coordinator_id') border-red-500 @enderror"
+                        <select name="field_coordinator_id" id="field_coordinator_id" class="form-select w-full select2"
                             required>
                             <option value="">Pilih Koordinator Lapangan</option>
                             @foreach ($fieldCoordinators as $fc)
@@ -104,57 +69,37 @@
                                 </option>
                             @endforeach
                         </select>
-                        @error('field_coordinator_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                     <div>
                         <label for="daily_deposit_amount" class="block text-sm font-medium text-default-700 mb-2">Jumlah
                             Setoran Harian (Rp)</label>
                         <input type="number" name="daily_deposit_amount" id="daily_deposit_amount"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('daily_deposit_amount') border-red-500 @enderror"
-                            value="{{ old('daily_deposit_amount', $agreement->daily_deposit_amount) }}"
-                            placeholder="Contoh: 30000" min="0" required>
-                        @error('daily_deposit_amount')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                            class="form-input w-full"
+                            value="{{ old('daily_deposit_amount', $agreement->daily_deposit_amount) }}" min="0"
+                            required>
                     </div>
                     <div>
                         <label for="start_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Mulai
                             Perjanjian</label>
-                        <input type="date" name="start_date" id="start_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('start_date') border-red-500 @enderror"
+                        <input type="date" name="start_date" id="start_date" class="form-input w-full"
                             value="{{ old('start_date', $agreement->start_date?->format('Y-m-d')) }}" required>
-                        @error('start_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                     <div>
                         <label for="end_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Akhir
                             Perjanjian</label>
-                        <input type="date" name="end_date" id="end_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('end_date') border-red-500 @enderror"
+                        <input type="date" name="end_date" id="end_date" class="form-input w-full"
                             value="{{ old('end_date', $agreement->end_date?->format('Y-m-d')) }}" required>
-                        @error('end_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                     <div>
                         <label for="signed_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal
                             Ditandatangani</label>
-                        <input type="date" name="signed_date" id="signed_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('signed_date') border-red-500 @enderror"
+                        <input type="date" name="signed_date" id="signed_date" class="form-input w-full"
                             value="{{ old('signed_date', $agreement->signed_date?->format('Y-m-d')) }}" required>
-                        @error('signed_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                     <div>
                         <label for="status" class="block text-sm font-medium text-default-700 mb-2">Status
                             Perjanjian</label>
-                        <select name="status" id="status"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('status') border-red-500 @enderror"
-                            required>
+                        <select name="status" id="status" class="form-select w-full" required>
                             <option value="active" {{ old('status', $agreement->status) == 'active' ? 'selected' : '' }}>
                                 Aktif</option>
                             <option value="expired" {{ old('status', $agreement->status) == 'expired' ? 'selected' : '' }}>
@@ -165,9 +110,6 @@
                                 {{ old('status', $agreement->status) == 'pending_renewal' ? 'selected' : '' }}>Menunggu
                                 Perpanjangan</option>
                         </select>
-                        @error('status')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
                 </div>
 
@@ -178,33 +120,29 @@
                     <div>
                         <label for="road_section_filter" class="block text-sm font-medium text-default-700 mb-2">Filter
                             Berdasarkan Ruas Jalan</label>
-                        <select id="road_section_filter"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500">
+                        <select id="road_section_filter" class="form-select w-full">
                             <option value="">Tampilkan Semua Ruas Jalan</option>
                             @foreach ($roadSections as $rs)
-                                <option value="{{ $rs->id }}"
-                                    {{ old('road_section_filter') == $rs->id ? 'selected' : '' }}>{{ $rs->name }}
-                                </option>
+                                <option value="{{ $rs->id }}">{{ $rs->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="mt-4">
-                        <label class="block text-sm font-medium text-default-700 mb-2">Pilih Lokasi Parkir yang
-                            Tersedia</label>
+                        <label class="block text-sm font-medium text-default-700 mb-2">Pilih Lokasi Parkir</label>
                         <div id="parking_location_checkboxes"
                             class="border border-default-200 rounded-md p-4 max-h-60 overflow-y-auto">
-                            {{-- Checkboxes will be rendered here by JavaScript --}}
                             @forelse ($availableParkingLocations as $location)
-                                <div class="flex items-center mb-2">
+                                <div class="flex items-center mb-2 checkbox-item">
                                     <input type="checkbox" name="parking_location_ids[]"
                                         id="parking_location_{{ $location->id }}" value="{{ $location->id }}"
                                         data-road-section-id="{{ $location->road_section_id }}"
-                                        class="form-checkbox h-4 w-4 text-primary-600 rounded border-default-300 focus:ring-primary-500"
+                                        class="form-checkbox h-4 w-4 text-primary-600"
                                         {{ in_array($location->id, old('parking_location_ids', $currentParkingLocationIds)) ? 'checked' : '' }}>
                                     <label for="parking_location_{{ $location->id }}"
                                         class="ml-2 text-sm text-default-800">
                                         {{ $location->name }} ({{ $location->roadSection->name ?? 'N/A' }}) - Status:
                                         {{ ucfirst(str_replace('_', ' ', $location->status)) }}
+
                                     </label>
                                 </div>
                             @empty
@@ -233,78 +171,46 @@
 @endsection
 
 @push('scripts')
+    {{-- Tambahkan jQuery dan Select2 JS jika belum ada di layout utama --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- Client-side validation for daily_deposit_amount to only allow numbers ---
-            const dailyDepositAmountInput = document.getElementById('daily_deposit_amount');
-            if (dailyDepositAmountInput) {
-                dailyDepositAmountInput.addEventListener('input', function(e) {
-                    let value = e.target.value;
-                    value = value.replace(/[^0-9.]/g, '');
-                    const parts = value.split('.');
-                    if (parts.length > 2) {
-                        value = parts[0] + '.' + parts.slice(1).join('');
-                    }
-                    e.target.value = value;
-                });
-            }
+        $(document).ready(function() {
+            // Inisialisasi Select2 pada dropdown
+            $('.select2').select2({
+                placeholder: 'Pilih salah satu',
+                allowClear: true
+            });
 
-            // --- Dynamic Parking Location Checkboxes ---
             const roadSectionFilter = document.getElementById('road_section_filter');
-            const parkingLocationCheckboxesContainer = document.getElementById('parking_location_checkboxes');
-            // Get old selected IDs (from validation failure)
-            const oldParkingLocationIds = @json(old('parking_location_ids', []));
-            const oldRoadSectionFilter = @json(old('road_section_filter')); // Get old selected road section filter
+            const checkboxesContainer = document.getElementById('parking_location_checkboxes');
 
-            // Store all checkbox elements initially
-            const allParkingLocationCheckboxes = Array.from(parkingLocationCheckboxesContainer.querySelectorAll(
-                'input[type="checkbox"]'));
-
-            // Function to filter and display parking locations checkboxes
-            function filterParkingLocationsCheckboxes() {
+            function filterParkingLocations() {
                 const selectedRoadSectionId = roadSectionFilter.value;
-                console.log('Filtering checkboxes for road section:', selectedRoadSectionId); // Debugging
 
-                allParkingLocationCheckboxes.forEach(checkbox => {
-                    const optionRoadSectionId = checkbox.dataset.roadSectionId;
-                    const isChecked = checkbox.checked; // Check if checkbox is currently checked
+                $(checkboxesContainer).find('.checkbox-item').each(function() {
+                    const checkbox = $(this).find('input[type="checkbox"]');
+                    const itemRoadSectionId = checkbox.data('road-section-id').toString();
+                    const isChecked = checkbox.is(':checked');
 
-                    // Show checkbox if:
-                    // 1. No road section filter is applied (show all)
-                    // 2. Checkbox belongs to the selected road section
-                    // 3. Checkbox is currently checked (to persist selections)
-                    if (!selectedRoadSectionId || optionRoadSectionId === selectedRoadSectionId ||
+                    // Tampilkan item jika:
+                    // 1. Tidak ada filter yang dipilih, ATAU
+                    // 2. ID ruas jalan item cocok dengan filter, ATAU
+                    // 3. Item tersebut sudah dicentang (agar tidak hilang saat filter)
+                    if (!selectedRoadSectionId || itemRoadSectionId === selectedRoadSectionId ||
                         isChecked) {
-                        checkbox.closest('.flex.items-center.mb-2').style.display =
-                            ''; // Show the div containing checkbox and label
-                        checkbox.disabled = false; // Enable the checkbox
-                        // console.log(`Showing checkbox ${checkbox.value}: ${checkbox.nextElementSibling.textContent}`); // Debugging
+                        $(this).show();
                     } else {
-                        checkbox.closest('.flex.items-center.mb-2').style.display = 'none'; // Hide the div
-                        checkbox.disabled = true; // Disable the checkbox
-                        // console.log(`Hiding checkbox ${checkbox.value}: ${checkbox.nextElementSibling.textContent}`); // Debugging
+                        // Hanya sembunyikan, jangan disable
+                        $(this).hide();
                     }
                 });
-                console.log('Checkbox filter applied.'); // Debugging
             }
 
-            if (roadSectionFilter && parkingLocationCheckboxesContainer) {
-                console.log(
-                    'Road section filter and parking location checkboxes container elements found.'); // Debugging
-                // Event listener for road section filter change
-                roadSectionFilter.addEventListener('change', filterParkingLocationsCheckboxes);
-
-                // Initial filtering based on old input or default
-                if (oldRoadSectionFilter) {
-                    roadSectionFilter.value = oldRoadSectionFilter;
-                    console.log('Initial filter set from old input:', oldRoadSectionFilter); // Debugging
-                }
-                filterParkingLocationsCheckboxes(); // Apply filter on page load
-            } else {
-                console.warn(
-                    'Road section filter or parking location checkboxes container elements not found.'
-                ); // Debugging
-            }
+            // Jalankan filter saat halaman dimuat dan saat filter diubah
+            filterParkingLocations();
+            $(roadSectionFilter).on('change', filterParkingLocations);
         });
     </script>
 @endpush
