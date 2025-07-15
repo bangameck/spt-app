@@ -1,61 +1,77 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" class="layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr" data-skin="default"
+    data-bs-theme="light">
 
     <head>
-        <meta charset="utf-8">
-        <title>@yield('title', 'Dashboard | Opatix')</title> {{-- Placeholder untuk judul halaman --}}
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="A fully featured admin theme which can be used to build CRM, CMS, etc." name="description">
-        <meta content="MyraStudio" name="author">
+        <meta charset="utf-8" />
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+        <title>@yield('title', 'Sistem Informasi Perparkiran')</title>
+        <meta name="description" content="Sistem Informasi Perparkiran" />
+        <meta name="robots" content="noindex, nofollow" />
 
-        <link rel="shortcut icon" href="{{ asset('assets/images/favicon.ico') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}" />
 
-        <link href="{{ asset('assets/css/icons.min.css') }}" rel="stylesheet" type="text/css">
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&ampdisplay=swap"
+            rel="stylesheet" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/iconify-icons.css') }}" />
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+        <link rel="stylesheet" href="{{ asset('assets/vendor/css/core.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/node-waves/node-waves.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css') }}" />
+        <link rel="stylesheet" href="{{ asset('assets/css/demo.css') }}" />
 
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        @stack('styles')
 
-        <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css">
-
-        @yield('styles') {{-- Placeholder untuk CSS tambahan per halaman --}}
+        <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
+        <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script>
+        <script src="{{ asset('assets/js/config.js') }}"></script>
     </head>
 
     <body>
+        <div class="layout-wrapper layout-content-navbar">
+            <div class="layout-container">
 
-        <div class="wrapper">
-            {{-- Sidebar --}}
-            @include('layouts.sidebar') {{-- Menggunakan @include untuk sidebar --}}
+                {{-- 1. Sidebar --}}
+                @include('layouts.partials._sidebar')
 
-            <div class="page-content">
-                {{-- Topbar --}}
-                @include('layouts.topbar') {{-- Menggunakan @include untuk topbar --}}
+                <div class="layout-page">
 
-                <main>
-                    <div class="flex items-center md:justify-between flex-wrap gap-2 mb-5">
-                        <h4 class="text-default-900 text-lg font-semibold">@yield('page_title', 'Dashboard')</h4> {{-- Placeholder untuk judul halaman utama --}}
-                        @yield('breadcrumb') {{-- Placeholder untuk breadcrumb --}}
+                    {{-- 2. Navbar --}}
+                    @include('layouts.partials._navbar')
+
+                    <div class="content-wrapper">
+                        <div class="container-xxl flex-grow-1 container-p-y">
+
+                            {{-- 3. Konten Dinamis --}}
+                            @yield('content')
+
+                        </div>
+                        {{-- 4. Footer --}}
+                        @include('layouts.partials._footer')
+
+                        <div class="content-backdrop fade"></div>
                     </div>
-                    @yield('content') {{-- Ini adalah bagian utama konten yang akan berubah per halaman --}}
-                </main>
-
-                {{-- Footer --}}
-                @include('layouts.footer') {{-- Menggunakan @include untuk footer --}}
+                </div>
             </div>
+
+            <div class="layout-overlay layout-menu-toggle"></div>
+            <div class="drag-target"></div>
         </div>
+        <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
+        <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/node-waves/node-waves.js') }}"></script>
+        <script src="{{ asset('assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js') }}"></script>
+        <script src="{{ asset('assets/vendor/js/menu.js') }}"></script>
 
-        <script src="{{ asset('assets/libs/jquery/jquery.min.js') }}"></script>
-        <script src="{{ asset('assets/libs/preline/preline.js') }}"></script>
-        <script src="{{ asset('assets/libs/simplebar/simplebar.min.js') }}"></script>
-        <script src="{{ asset('assets/libs/iconify-icon/iconify-icon.min.js') }}"></script>
-        <script src="{{ asset('assets/libs/node-waves/waves.min.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="https://unpkg.com/lucide@latest"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        @stack('vendors-js')
 
-        <script src="{{ asset('assets/js/app.js') }}"></script>
+        <script src="{{ asset('assets/js/main.js') }}"></script>
 
-        @stack('scripts') {{-- Placeholder untuk JavaScript tambahan per halaman --}}
+        @stack('scripts')
     </body>
 
 </html>

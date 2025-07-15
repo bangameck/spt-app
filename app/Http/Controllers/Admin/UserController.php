@@ -22,6 +22,16 @@ class UserController extends Controller
         // Mulai query User
         $query = User::query();
 
+        $query->whereIn('role', ['admin', 'staff']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('username', 'like', '%' . $search . '%')
+                    ->orWhere('email', 'like', '%' . $search . '%');
+            });
+        }
+
         // Terapkan filter pencarian jika ada
         if ($search) {
             $query->where(function ($q) use ($search) {

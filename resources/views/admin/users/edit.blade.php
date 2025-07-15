@@ -1,407 +1,241 @@
-@extends('layouts.app') {{-- Pastikan ini mengacu pada layout utama Anda --}}
+@extends('layouts.app')
 
-@section('title', 'Edit Pengguna: ' . $user->name) {{-- Menampilkan nama pengguna di judul --}}
+@section('title', 'Edit User: ' . $user->name)
 
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Edit Pengguna: {{ $user->name }}</h4>
-            <a href="{{ route('admin.users.index') }}"
-                class="px-6 py-2 rounded-md text-default-600 bg-default-100 hover:bg-default-200 transition-all">
-                Kembali ke Daftar Pengguna
-            </a>
-        </div>
-
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">Ada beberapa masalah dengan input Anda.</span>
-                <ul class="mt-3 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
-            </div>
-        @endif
-
-        <div class="card bg-white shadow rounded-lg p-6">
-            <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                @method('PATCH') {{-- Menggunakan metode PATCH untuk update --}}
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-default-700 mb-2">Nama Lengkap</label>
-                        <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}"
-                            class="form-input w-full px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500 @error('name') border-red-500 @enderror"
-                            required autofocus>
-                        @error('name')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="username" class="block text-sm font-medium text-default-700 mb-2">Username</label>
-                        <input type="text" id="username" name="username" value="{{ old('username', $user->username) }}"
-                            class="form-input w-full px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500 @error('username') border-red-500 @enderror"
-                            required>
-                        @error('username')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-default-700 mb-2">Email</label>
-                        <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}"
-                            class="form-input w-full px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500 @error('email') border-red-500 @enderror"
-                            required>
-                        @error('email')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="role" class="block text-sm font-medium text-default-700 mb-2">Role</label>
-                        <select id="role" name="role"
-                            class="form-select w-full px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500 @error('role') border-red-500 @enderror"
-                            required>
-                            <option value="">Pilih Role</option>
-                            {{-- $roles dikirim dari UserController@edit --}}
-                            @foreach ($roles as $role)
-                                <option value="{{ $role }}"
-                                    {{ old('role', $user->role) == $role ? 'selected' : '' }}>
-                                    {{ ucfirst(str_replace('_', ' ', $role)) }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('role')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-                    {{-- START: Updated Password Field HTML --}}
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-default-700 mb-2">Password (Kosongkan
-                            jika tidak ingin mengubah)</label>
-                        <div class="relative"> {{-- Tambahkan div wrapper untuk positioning toggle --}}
-                            <input type="password" id="password" name="password"
-                                class="form-input w-full pr-10 px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500 @error('password') border-red-500 @enderror">
-                            <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                                id="togglePassword">
-                                {{-- Eye icon (closed) --}}
-                                <svg class="h-5 w-5 text-default-400" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.418 0-8-3.582-8-8 0-1.391.354-2.709.975-3.875m3.75 3.75a3 3 0 114.242 4.242M21 12c-1.391-.354-2.709-.975-3.875-1.925M3 12c.354 1.391.975 2.709 1.925 3.875m-3.75-3.75a3 3 0 104.242-4.242M1.925 18.825A10.05 10.05 0 0112 19c4.418 0 8-3.582 8-8 0-1.391-.354-2.709-.975-3.875M12 4v.01" />
-                                </svg>
-                            </span>
-                        </div>
-                        @error('password')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label for="password_confirmation"
-                            class="block text-sm font-medium text-default-700 mb-2">Konfirmasi Password</label>
-                        <div class="relative"> {{-- Tambahkan div wrapper untuk positioning toggle --}}
-                            <input type="password" id="password_confirmation" name="password_confirmation"
-                                class="form-input w-full pr-10 px-4 py-2 border border-default-200 rounded-md focus:border-primary-500 focus:ring-primary-500">
-                            <span class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
-                                id="togglePasswordConfirmation">
-                                {{-- Eye icon (closed) --}}
-                                <svg class="h-5 w-5 text-default-400" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.418 0-8-3.582-8-8 0-1.391.354-2.709.975-3.875m3.75 3.75a3 3 0 114.242 4.242M21 12c-1.391-.354-2.709-.975-3.875-1.925M3 12c.354 1.391.975 2.709 1.925 3.875m-3.75-3.75a3 3 0 104.242-4.242M1.925 18.825A10.05 10.05 0 0112 19c4.418 0 8-3.582 8-8 0-1.391-.354-2.709-.975-3.875M12 4v.01" />
-                                </svg>
-                            </span>
-                        </div>
-                    </div>
-                    {{-- END: Updated Password Field HTML --}}
-                </div>
-
-                <div class="mb-6">
-                    <label for="img" class="block text-sm font-medium text-default-700 mb-2">Gambar Profil (Drag & Drop
-                        atau Klik)</label>
-
-                    <div id="drop-area"
-                        class="border-2 border-dashed border-default-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary-500 transition-all">
-                        <input type="file" id="img-upload" name="img" accept="image/*" class="hidden">
-                        <p class="text-default-500 mb-2">Seret dan lepas gambar baru di sini, atau</p>
-                        <button type="button" id="select-file-btn"
-                            class="px-4 py-2 rounded-md bg-primary-100 text-primary-700 hover:bg-primary-200">
-                            Pilih File
-                        </button>
-
-                        {{-- Elemen untuk menampilkan informasi file baru --}}
-                        <div id="file-info" class="mt-4 text-default-600 text-sm hidden">
-                            <p><strong>Nama File:</strong> <span id="file-name"></span></p>
-                            <p><strong>Ukuran File:</strong> <span id="file-size"></span></p>
-                        </div>
-                        {{-- Elemen untuk menampilkan pesan error validasi ukuran file --}}
-                        <div id="file-error" class="mt-2 text-red-600 text-sm font-medium hidden"></div>
-
-                        {{-- Elemen untuk menampilkan preview gambar (baru atau lama) --}}
-                        <div id="image-preview" class="mt-4 flex justify-center items-center">
-                            @if ($user->img)
-                                {{-- Tampilkan gambar profil yang sudah ada --}}
-                                <img id="existing-image" src="{{ asset($user->img) }}"
-                                    class="max-w-full h-32 object-contain rounded-md" alt="Gambar Profil Saat Ini">
-                            @endif
-                        </div>
-
-                        @error('img')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="flex justify-end">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                        Perbarui Pengguna
-                    </button>
-                </div>
-            </form>
+    {{-- Page Title & Breadcrumb --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Edit User: {{ $user->name }}</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.users.index') }}">Users</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
     </div>
+
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('admin.users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+        @csrf
+        @method('PATCH') {{-- Gunakan PATCH atau PUT untuk update --}}
+        <div class="row g-6">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Detail Akun</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-floating form-floating-outline">
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        placeholder="Masukkan Nama Lengkap" value="{{ old('name', $user->name) }}"
+                                        required />
+                                    <label for="name">Nama Lengkap</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="username" name="username"
+                                            placeholder="Username" value="{{ old('username', $user->username) }}"
+                                            required />
+                                        <label for="username">Username</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-floating form-floating-outline">
+                                    <input type="email" class="form-control" id="email" name="email"
+                                        placeholder="contoh@email.com" value="{{ old('email', $user->email) }}" required />
+                                    <label for="email">Email</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-password-toggle">
+                                    <label class="form-label" for="password">Password Baru (Opsional)</label>
+                                    <div class="input-group input-group-merge">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="password" id="password" class="form-control" name="password"
+                                                placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                            <label for="password">Kosongkan jika tidak diubah</label>
+                                        </div>
+                                        <span class="input-group-text cursor-pointer"><i
+                                                class="icon-base ri ri-eye-off-line"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-password-toggle">
+                                    <label class="form-label" for="password_confirmation">Ulangi Password Baru</label>
+                                    <div class="input-group input-group-merge">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="password" id="password_confirmation" class="form-control"
+                                                name="password_confirmation"
+                                                placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                            <label for="password_confirmation">Ulangi Password Baru</label>
+                                        </div>
+                                        <span class="input-group-text cursor-pointer"><i
+                                                class="icon-base ri ri-eye-off-line"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">Role</label>
+                                <div class="d-flex pt-2">
+                                    <div class="form-check me-4">
+                                        <input name="role" class="form-check-input" type="radio" value="admin"
+                                            id="roleAdmin" {{ old('role', $user->role) == 'admin' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleAdmin"> Admin </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input name="role" class="form-check-input" type="radio" value="staff"
+                                            id="roleStaff" {{ old('role', $user->role) == 'staff' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleStaff"> Staff </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Foto Profil</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-column align-items-center">
+                            @if ($user->img && file_exists(public_path($user->img)))
+                                <img src="{{ asset($user->img) }}" alt="user-avatar"
+                                    class="d-block w-px-120 h-px-120 rounded-circle mb-4" id="uploadedAvatar" />
+                            @else
+                                <img src="{{ asset('assets/img/avatars/1.png') }}" alt="user-avatar"
+                                    class="d-block w-px-120 h-px-120 rounded-circle mb-4" id="uploadedAvatar" />
+                            @endif
+
+                            <div class="button-wrapper">
+                                <label for="img-upload" class="btn btn-primary me-3" tabindex="0">
+                                    <span class="d-none d-sm-block">Ubah Foto</span>
+                                    <i class="icon-base ri-upload-2-line d-sm-none"></i>
+                                    <input type="file" id="img-upload" name="img" class="account-file-input"
+                                        hidden accept="image/png, image/jpeg" />
+                                </label>
+                                <button type="button" class="btn btn-outline-secondary account-image-reset">
+                                    <i class="icon-base ri-refresh-line d-block d-sm-none"></i>
+                                    <span class="d-none d-sm-block">Reset</span>
+                                </button>
+                                <div id="file-error" class="mt-2 text-danger text-sm text-center"></div>
+                                <p class="text-muted mt-3 mb-0 text-center">Hanya JPG/PNG. Akan dikompres di bawah 300KB.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 text-end">
+                <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary">Batal</a>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+            </div>
+        </div>
+    </form>
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
     <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('img-upload');
-        const selectFileBtn = document.getElementById('select-file-btn');
-        const imagePreview = document.getElementById('image-preview');
-        const fileInfoDiv = document.getElementById('file-info');
-        const fileNameSpan = document.getElementById('file-name');
-        const fileSizeSpan = document.getElementById('file-size');
-        const fileErrorDiv = document.getElementById('file-error');
-
-        // Menangani gambar yang sudah ada saat halaman dimuat
-        const existingImage = document.getElementById('existing-image');
-        if (existingImage) {
-            imagePreview.innerHTML = '';
-            imagePreview.appendChild(existingImage);
-        }
-
-        // Mencegah perilaku default browser untuk drag
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Highlight area saat file di-drag di atasnya
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight(e) {
-            dropArea.classList.add('border-primary-600', 'bg-primary-50');
-        }
-
-        function unhighlight(e) {
-            dropArea.classList.remove('border-primary-600', 'bg-primary-50');
-        }
-
-        // Handle file drop
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            let dt = e.dataTransfer;
-            let files = dt.files;
-            handleFiles(files);
-        }
-
-        // Handle file selection via button click
-        selectFileBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
-
-        function handleFiles(files) {
-            // Hapus info dan error sebelumnya
-            fileInfoDiv.classList.add('hidden');
-            fileErrorDiv.classList.add('hidden');
-            imagePreview.innerHTML = ''; // Hapus preview gambar yang sudah ada
-
-            if (files.length === 0) {
-                // Jika tidak ada file yang dipilih (misal, jendela dialog dibatalkan)
-                fileInput.value = ''; // Pastikan input file sebenarnya kosong
-                // Jika ada gambar lama, tampilkan kembali
-                if (existingImage && !existingImage.src.includes('blob:')) {
-                    imagePreview.appendChild(existingImage);
-                }
-                return;
-            }
-
-            const file = files[0]; // Ambil file pertama saja (karena ini untuk satu gambar profil)
-            const MAX_SIZE_MB = 2; // Ukuran maksimum yang diizinkan dalam MB
-            const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024; // Konversi ke bytes
-
-            // Validasi sisi klien: Periksa tipe file
-            if (!file.type.startsWith('image/')) {
-                fileErrorDiv.textContent = 'File yang dipilih harus berupa gambar (JPEG, PNG, GIF, SVG).';
-                fileErrorDiv.classList.remove('hidden');
-                fileInput.value = '';
-                if (existingImage && !existingImage.src.includes('blob:')) {
-                    imagePreview.appendChild(existingImage);
-                }
-                return;
-            }
-
-            // Validasi sisi klien: Periksa ukuran file
-            if (file.size > MAX_SIZE_BYTES) {
-                fileErrorDiv.textContent =
-                    `Ukuran file harus dibawah ${MAX_SIZE_MB} MB. (Ukuran saat ini: ${formatBytes(file.size)})`;
-                fileErrorDiv.classList.remove('hidden');
-                fileInput.value = '';
-                if (existingImage && !existingImage.src.includes('blob:')) {
-                    imagePreview.appendChild(existingImage);
-                }
-                return;
-            }
-
-            // Tampilkan informasi file
-            fileNameSpan.textContent = file.name;
-            fileSizeSpan.textContent = formatBytes(file.size);
-            fileInfoDiv.classList.remove('hidden');
-
-            // Set file ke input file yang sebenarnya
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            fileInput.files = dataTransfer.files;
-
-            // Tampilkan preview gambar baru
-            previewFile(file);
-        }
-
-        // Fungsi helper untuk memformat ukuran byte ke format yang mudah dibaca
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
-
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-        function previewFile(file) {
-            let reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onloadend = function() {
-                imagePreview.innerHTML = ''; // Pastikan preview lama terhapus
-                let imgElement = document.createElement('img');
-                imgElement.src = reader.result;
-                imgElement.classList.add('max-w-full', 'h-32', 'object-contain', 'rounded-md');
-                imgElement.alt = 'Preview Gambar Baru';
-                imagePreview.appendChild(imgElement);
-            }
-        }
-
-        // === START: Validasi dan Transformasi Input & Toggle Password Visibility ===
-        // Deklarasikan variabel-variabel ini HANYA SEKALI di sini
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const passwordConfirmationInput = document.getElementById('password_confirmation');
-        const togglePassword = document.getElementById('togglePassword');
-        const togglePasswordConfirmation = document.getElementById('togglePasswordConfirmation');
-
-
-        // Untuk input Username
-        if (usernameInput) {
-            usernameInput.addEventListener('input', function(e) {
-                let value = e.target.value;
-                // 1. Ubah ke huruf kecil
-                value = value.toLowerCase();
-                // 2. Hapus spasi (jika ada)
-                value = value.replace(/\s/g, '');
-                // 3. Hanya izinkan huruf (a-z), angka (0-9), underscore (_), dan hyphen (-)
-                // Karakter lain akan dihapus
-                value = value.replace(/[^a-z0-9_-]/g, '');
-                e.target.value = value;
-            });
-        }
-
-        // Untuk input Password
-        if (passwordInput) {
-            passwordInput.addEventListener('input', function(e) {
-                let value = e.target.value;
-                // Hapus spasi
-                value = value.replace(/\s/g, '');
-                e.target.value = value;
-            });
-        }
-
-        // Untuk input Konfirmasi Password (juga tidak boleh ada spasi)
-        if (passwordConfirmationInput) {
-            passwordConfirmationInput.addEventListener('input', function(e) {
-                let value = e.target.value;
-                // Hapus spasi
-                value = value.replace(/\s/g, '');
-                e.target.value = value;
-            });
-        }
-
-        // Fungsi untuk setup toggle password
-        function setupPasswordToggle(inputElement, toggleElement) {
-            if (inputElement && toggleElement) {
-                toggleElement.addEventListener('click', function() {
-                    const type = inputElement.getAttribute('type') === 'password' ? 'text' : 'password';
-                    inputElement.setAttribute('type', type);
-
-                    // Toggle eye icon
-                    if (type === 'password') {
-                        // Eye closed icon
-                        toggleElement.innerHTML = `
-                        <svg class="h-5 w-5 text-default-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.418 0-8-3.582-8-8 0-1.391.354-2.709.975-3.875m3.75 3.75a3 3 0 114.242 4.242M21 12c-1.391-.354-2.709-.975-3.875-1.925M3 12c.354 1.391.975 2.709 1.925 3.875m-3.75-3.75a3 3 0 104.242-4.242M1.925 18.825A10.05 10.05 0 0112 19c4.418 0 8-3.582 8-8 0-1.391-.354-2.709-.975-3.875M12 4v.01"/>
-                        </svg>
-                    `;
-                    } else {
-                        // Eye open icon
-                        toggleElement.innerHTML = `
-                        <svg class="h-5 w-5 text-default-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    `;
-                    }
+        // Kode JavaScript yang sama persis dengan halaman create
+        // Ini memastikan semua fungsionalitas (generate username, validasi,
+        // preview & kompresi gambar, toggle password) berjalan di halaman edit juga.
+        document.addEventListener("DOMContentLoaded", function() {
+            const nameInput = document.getElementById('name');
+            const usernameInput = document.getElementById('username');
+            if (usernameInput) {
+                usernameInput.addEventListener('input', e => {
+                    e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_]/g,
+                        '');
                 });
             }
-        }
-
-        // Panggil fungsi setup untuk kedua field password
-        setupPasswordToggle(passwordInput, togglePassword);
-        setupPasswordToggle(passwordConfirmationInput, togglePasswordConfirmation);
-        // === END: Validasi dan Transformasi Input & Toggle Password Visibility ===
+            document.querySelectorAll('input[type="password"]').forEach(input => {
+                if (input) {
+                    input.addEventListener('input', e => {
+                        e.target.value = e.target.value.replace(/\s/g, '');
+                    });
+                }
+            });
+            const fileInput = document.getElementById('img-upload');
+            const uploadedAvatar = document.getElementById('uploadedAvatar');
+            const resetButton = document.querySelector('.account-image-reset');
+            const fileErrorDiv = document.getElementById('file-error');
+            if (fileInput && uploadedAvatar && resetButton) {
+                const defaultAvatar = uploadedAvatar.src;
+                fileInput.addEventListener('change', async (e) => {
+                    const imageFile = e.target.files[0];
+                    if (!imageFile) return;
+                    fileErrorDiv.textContent = '';
+                    if (!['image/jpeg', 'image/png'].includes(imageFile.type)) {
+                        fileErrorDiv.textContent = 'Hanya file JPG atau PNG.';
+                        fileInput.value = '';
+                        return;
+                    }
+                    const options = {
+                        maxSizeMB: 0.3,
+                        maxWidthOrHeight: 1024,
+                        useWebWorker: true,
+                        fileType: imageFile.type
+                    }
+                    try {
+                        const compressedFile = await imageCompression(imageFile, options);
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(new File([compressedFile], imageFile.name, {
+                            type: compressedFile.type
+                        }));
+                        fileInput.files = dataTransfer.files;
+                        uploadedAvatar.src = URL.createObjectURL(compressedFile);
+                    } catch (error) {
+                        console.error("Image compression error:", error);
+                        fileErrorDiv.textContent = "Gagal mengkompres gambar.";
+                        fileInput.value = '';
+                    }
+                });
+                resetButton.addEventListener('click', () => {
+                    uploadedAvatar.src = defaultAvatar;
+                    fileInput.value = '';
+                    fileErrorDiv.textContent = '';
+                });
+            }
+            // document.querySelectorAll('.form-password-toggle .input-group-text').forEach(icon => {
+            //     icon.addEventListener('click', () => {
+            //         const input = icon.closest('.input-group').querySelector('input');
+            //         const iconElement = icon.querySelector('i');
+            //         if (input.type === 'password') {
+            //             input.type = 'text';
+            //             iconElement.classList.remove('ri-eye-off-line');
+            //             iconElement.classList.add('ri-eye-line');
+            //         } else {
+            //             input.type = 'password';
+            //             iconElement.classList.remove('ri-eye-line');
+            //             iconElement.classList.add('ri-eye-off-line');
+            //         }
+            //     });
+            // });
+        });
     </script>
 @endpush
