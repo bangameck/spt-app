@@ -1,266 +1,282 @@
 @extends('layouts.app')
 
-@section('title', 'Riwayat Perjanjian')
+@section('title', 'Histori Perjanjian Kerjasama')
 
 @section('content')
+    {{-- 1. Pindahkan CSS dari @push ke dalam @section('content') --}}
+    <style>
+        /* === HORIZONTAL TIMELINE STYLES === */
+        .timeline-horizontal-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+            /* Ubah ke 'auto' agar scrollbar muncul jika perlu */
+            -webkit-overflow-scrolling: touch;
+            /* Scroll lebih mulus di mobile */
+            padding: 2rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: #a0aec0 #e2e8f0;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar-thumb {
+            background-color: #a0aec0;
+            border-radius: 10px;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            height: 220px;
+            /* Sedikit lebih tinggi untuk memberi ruang */
+            padding: 0 40px;
+            white-space: nowrap;
+            /* Mencegah item turun baris */
+            display: inline-block;
+            /* Membuat wrapper mengikuti lebar konten */
+        }
+
+        /* Garis horizontal di tengah */
+        .timeline-line-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            /* Pastikan garis membentang selebar konten */
+            height: 4px;
+            background-color: #e2e8f0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        /* Kontainer untuk semua item */
+        .timeline-items {
+            display: flex;
+            /* Gunakan flexbox untuk alignment */
+            align-items: flex-start;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Setiap item dalam timeline */
+        .timeline-item-h {
+            display: inline-flex;
+            /* Menggunakan inline-flex */
+            flex-direction: column;
+            position: relative;
+            width: 280px;
+            margin: 0 20px;
+            padding-top: 50px;
+            white-space: normal;
+        }
+
+        /* Item di posisi atas */
+        .timeline-item-h.item-top {
+            padding-top: 0;
+            padding-bottom: 50px;
+            justify-content: flex-end;
+            /* Dorong konten ke bawah */
+        }
+
+        /* Pin ikon di garis tengah */
+        .timeline-pin-h {
+            position: absolute;
+            left: 50%;
+            top: -12px;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #f8fafc;
+            background-clip: padding-box;
+        }
+
+        .item-top .timeline-pin-h {
+            top: auto;
+            bottom: -12px;
+        }
+
+        /* Garis penghubung dari pin ke kartu */
+        .timeline-item-h::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 40px;
+            background-color: #cbd5e1;
+            transform: translateX(-50%);
+        }
+
+        .item-top::after {
+            top: auto;
+            bottom: 0;
+        }
+
+        /* Konten kartu */
+        .timeline-content-h {
+            padding: 1rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            text-align: left;
+        }
+    </style>
+
     <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Riwayat Perjanjian</h4>
-            {{-- Tidak ada tombol tambah karena history dibuat otomatis --}}
-        </div>
+        <h4 class="text-default-900 text-2xl font-bold mb-6">Histori Perjanjian Kerjasama</h4>
 
-        {{-- SweetAlert2 Success/Error Messages (jika ada) --}}
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Sukses!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
-            </div>
-        @endif
-
+        {{-- Form Filter --}}
         <div class="card bg-white shadow rounded-lg p-6">
-            {{-- Filter Form --}}
-            <form action="{{ route('masterdata.agreement-histories.index') }}" method="GET" class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="search" class="block text-sm font-medium text-default-700 mb-2">Cari No. Perjanjian /
-                            Tipe Event / Catatan / Pengubah</label>
-                        <input type="text" name="search" id="search" placeholder="Cari..."
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                            value="{{ $search ?? '' }}">
+            <form action="{{ route('masterdata.agreement-histories.index') }}" method="GET">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="agreement_id" class="block text-sm font-medium text-default-700 mb-2">Pilih
+                            Perjanjian</label>
+                        <select name="agreement_id" id="agreement_id" class="form-select w-full select2" required>
+                            <option value="">Cari dan Pilih Perjanjian...</option>
+                            @foreach ($agreementsForFilter as $item)
+                                <option value="{{ $item->id }}"
+                                    {{ $selectedAgreementId == $item->id ? 'selected' : '' }}>
+                                    {{ $item->agreement_number }} - {{ $item->fieldCoordinator->user->name ?? 'N/A' }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
-                        <label for="start_date" class="block text-sm font-medium text-default-700 mb-2">Rentang
-                            Tanggal</label>
-                        <div class="flex items-center gap-2">
-                            <input type="date" name="start_date" id="start_date"
-                                class="form-input w-1/2 px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                                value="{{ $startDate ?? '' }}">
-                            <span>-</span>
-                            <input type="date" name="end_date" id="end_date"
-                                class="form-input w-1/2 px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                                value="{{ $endDate ?? '' }}">
+                        <button type="submit"
+                            class="w-full px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700">Tampilkan
+                            Histori</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {{-- Hasil Timeline --}}
+        @if ($agreement)
+            <div class="card bg-white shadow rounded-lg p-6 mt-6">
+                <h5 class="text-xl font-semibold text-default-800 mb-2 text-center">
+                    Timeline untuk: {{ $agreement->agreement_number }}
+                </h5>
+
+                <div class="timeline-horizontal-container">
+                    <div class="timeline-wrapper">
+                        <div class="timeline-line-h"></div>
+                        <div class="timeline-items">
+                            @forelse ($agreement->histories as $key => $history)
+                                @php
+                                    $positionClass = $key % 2 == 0 ? 'item-top' : '';
+                                    $icon = 'i-lucide-file-text';
+                                    $color = 'bg-gray-400';
+                                    switch ($history->event_type) {
+                                        case 'agreement_created':
+                                            $icon = 'i-lucide-file-plus-2';
+                                            $color = 'bg-primary-500';
+                                            break;
+                                        case 'location_added':
+                                            $icon = 'i-lucide-map-pin';
+                                            $color = 'bg-green-500';
+                                            break;
+                                        case 'location_removed':
+                                            $icon = 'i-lucide-map-pin-off';
+                                            $color = 'bg-amber-500';
+                                            break;
+                                        case 'deposit_changed':
+                                            $icon = 'i-lucide-receipt';
+                                            $color = 'bg-blue-500';
+                                            break;
+                                        case 'status_changed':
+                                            $icon = 'i-lucide-toggle-right';
+                                            $color = 'bg-teal-500';
+                                            break;
+                                        case 'agreement_terminated':
+                                            $icon = 'i-lucide-shield-x';
+                                            $color = 'bg-red-500';
+                                            break;
+                                    }
+                                @endphp
+                                <div class="timeline-item-h {{ $positionClass }}">
+                                    <div class="timeline-content-h">
+                                        <p class="font-semibold text-sm text-default-700">
+                                            {{ $history->creator->name ?? 'Sistem' }}</p>
+                                        <p class="text-xs text-default-400 mb-2">
+                                            {{ $history->created_at->translatedFormat('d M Y') }}</p>
+                                        <p class="text-sm text-default-800">{{ $history->notes }}</p>
+                                    </div>
+                                    <div class="timeline-pin-h {{ $color }}">
+                                        <i class="{{ $icon }} text-white size-3"></i>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center w-full py-8 absolute">
+                                    <p class="text-default-500">Belum ada riwayat tercatat untuk perjanjian ini.</p>
+                                </div>
+                            @endforelse
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2 mt-4">
-                    <button type="submit"
-                        class="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-all">
-                        Tampilkan Riwayat
-                    </button>
-                    @if ($search || $startDate || $endDate)
-                        <a href="{{ route('masterdata.agreement-histories.index') }}"
-                            class="px-4 py-2 rounded-md bg-default-200 text-default-800 hover:bg-default-300 transition-all">
-                            Reset Filter
-                        </a>
-                    @endif
-                </div>
-            </form>
-
-            {{-- Tabel Riwayat --}}
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg mt-6">
-                <table class="w-full text-sm text-left text-default-500">
-                    <thead class="text-xs text-default-700 uppercase bg-default-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">No. Perjanjian</th>
-                            <th scope="col" class="px-6 py-3">Tipe Event</th>
-                            <th scope="col" class="px-6 py-3">Catatan</th>
-                            <th scope="col" class="px-6 py-3">Oleh</th>
-                            <th scope="col" class="px-6 py-3">Tanggal</th>
-                            <th scope="col" class="px-6 py-3">Detail Perubahan</th>
-                            <th scope="col" class="px-6 py-3">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($agreementHistories as $history)
-                            <tr class="bg-white border-b hover:bg-default-50">
-                                <td class="px-6 py-4 font-medium text-default-900 whitespace-nowrap">
-                                    {{ $history->agreement->agreement_number ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4">{{ ucfirst(str_replace('_', ' ', $history->event_type)) }}</td>
-                                <td class="px-6 py-4">{{ $history->notes ?? '-' }}</td>
-                                <td class="px-6 py-4">{{ $history->changer->name ?? 'Sistem' }}</td>
-                                <td class="px-6 py-4">{{ $history->created_at->format('d M Y H:i') }}</td>
-                                <td class="px-6 py-4">
-                                    @if ($history->old_value || $history->new_value)
-                                        <button type="button"
-                                            class="text-blue-600 hover:underline show-history-details-btn"
-                                            data-old-value="{{ json_encode($history->old_value) }}"
-                                            data-new-value="{{ json_encode($history->new_value) }}">
-                                            Lihat Detail
-                                        </button>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    @if (isset($history->old_value['parking_locations_snapshot']) ||
-                                            isset($history->new_value['parking_locations_snapshot']))
-                                        <button type="button"
-                                            class="font-medium text-purple-600 hover:underline show-old-agreement-locations-btn"
-                                            data-history-id="{{ $history->id }}"
-                                            data-agreement-number="{{ $history->agreement->agreement_number ?? 'N/A' }}"
-                                            data-event-type="{{ $history->event_type }}"
-                                            data-old-locations="{{ json_encode($history->old_value['parking_locations_snapshot'] ?? []) }}"
-                                            data-new-locations="{{ json_encode($history->new_value['parking_locations_snapshot'] ?? []) }}">
-                                            Lihat Lokasi Lama
-                                        </button>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="7" class="px-6 py-4 text-center text-default-500">Tidak ada riwayat
-                                    perjanjian ditemukan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
-
-            {{-- Pagination Links --}}
-            <div class="mt-4">
-                {{ $agreementHistories->appends(request()->except('page'))->links('vendor.pagination.tailwind') }}
+        @else
+            <div class="card bg-white shadow rounded-lg p-10 mt-6 text-center">
+                <i class="i-lucide-history text-5xl text-default-400"></i>
+                <p class="mt-4 text-default-600">Pilih perjanjian untuk melihat timeline historinya.</p>
             </div>
-        </div>
+        @endif
     </div>
 @endsection
 
 @push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- SweetAlert2 for History Details (General Changes) ---
-            document.querySelectorAll('.show-history-details-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const oldValue = JSON.parse(this.dataset.oldValue);
-                    const newValue = JSON.parse(this.dataset.newValue);
-
-                    let htmlContent = '<div>';
-                    htmlContent += '<h5 class="text-lg font-bold mb-2">Perubahan Detail:</h5>';
-
-                    if (oldValue) {
-                        htmlContent += '<p class="font-semibold mt-4 mb-1">Nilai Lama:</p>';
-                        htmlContent +=
-                            '<pre class="bg-gray-100 p-2 rounded text-sm overflow-auto max-h-40">' +
-                            JSON.stringify(oldValue, null, 2) + '</pre>';
-                    }
-                    if (newValue) {
-                        htmlContent += '<p class="font-semibold mt-4 mb-1">Nilai Baru:</p>';
-                        htmlContent +=
-                            '<pre class="bg-gray-100 p-2 rounded text-sm overflow-auto max-h-40">' +
-                            JSON.stringify(newValue, null, 2) + '</pre>';
-                    }
-                    htmlContent += '</div>';
-
-                    Swal.fire({
-                        title: 'Detail Riwayat',
-                        html: htmlContent,
-                        icon: 'info',
-                        width: '600px',
-                        confirmButtonText: 'Tutup',
-                        customClass: {
-                            container: 'swal-wide',
-                            popup: 'swal2-popup' // Add this class to your custom CSS if needed
-                        }
-                    });
-                });
+        $(document).ready(function() {
+            // Inisialisasi Select2
+            $('.select2').select2({
+                placeholder: "Cari...",
+                allowClear: true
             });
 
-            // --- SweetAlert2 for Old Agreement Locations (Timeline View) ---
-            document.querySelectorAll('.show-old-agreement-locations-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const agreementNumber = this.dataset.agreementNumber;
-                    const eventType = this.dataset.eventType;
-                    const oldLocations = JSON.parse(this.dataset.oldLocations);
-                    const newLocations = JSON.parse(this.dataset.newLocations);
+            // Logika Drag to Scroll untuk timeline
+            const wrapper = document.querySelector('.timeline-horizontal-container');
+            if (wrapper) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
 
-                    let htmlContent = `
-                    <h5 class="text-lg font-bold mb-3">Lokasi Parkir Terkait Perjanjian "${agreementNumber}"</h5>
-                    <p class="text-sm text-default-600 mb-4">Tipe Event: ${eventType.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>
-                `;
-
-                    if (eventType === 'location_removed') {
-                        // For location_removed, oldLocations contains the single removed location
-                        const removedLoc = oldLocations[
-                            0]; // Assuming only one location is removed per event
-                        htmlContent += `
-                        <div class="border-l-2 border-red-500 pl-4 mb-4">
-                            <p class="font-semibold text-red-700">Lokasi Dikeluarkan:</p>
-                            <p class="text-sm">Nama: ${removedLoc.name}</p>
-                            <p class="text-sm">Ruas Jalan: ${removedLoc.road_section}</p>
-                            <p class="text-sm">Status: ${removedLoc.status.replace('_', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>
-                        </div>
-                    `;
-                    } else if (eventType === 'agreement_updated') {
-                        const added = newLocations.filter(newLoc => !oldLocations.some(oldLoc =>
-                            oldLoc.id === newLoc.id));
-                        const removed = oldLocations.filter(oldLoc => !newLocations.some(newLoc =>
-                            newLoc.id === oldLoc.id));
-                        const unchanged = newLocations.filter(newLoc => oldLocations.some(oldLoc =>
-                            oldLoc.id === newLoc.id));
-
-                        if (added.length > 0) {
-                            htmlContent += `
-                            <div class="border-l-2 border-green-500 pl-4 mb-4">
-                                <p class="font-semibold text-green-700">Lokasi Ditambahkan:</p>
-                                <ul class="list-disc list-inside text-sm">
-                                    ${added.map(loc => `<li>${loc.name} (${loc.road_section})</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        }
-                        if (removed.length > 0) {
-                            htmlContent += `
-                            <div class="border-l-2 border-red-500 pl-4 mb-4">
-                                <p class="font-semibold text-red-700">Lokasi Dikeluarkan:</p>
-                                <ul class="list-disc list-inside text-sm">
-                                    ${removed.map(loc => `<li>${loc.name} (${loc.road_section})</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        }
-                        if (unchanged.length > 0) {
-                            htmlContent += `
-                            <div class="border-l-2 border-gray-500 pl-4 mb-4">
-                                <p class="font-semibold text-gray-700">Lokasi Tidak Berubah:</p>
-                                <ul class="list-disc list-inside text-sm">
-                                    ${unchanged.map(loc => `<li>${loc.name} (${loc.road_section})</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                        }
-                    } else if (eventType === 'agreement_created') {
-                        htmlContent += `
-                        <div class="border-l-2 border-blue-500 pl-4 mb-4">
-                            <p class="font-semibold text-blue-700">Lokasi Awal Perjanjian:</p>
-                            <ul class="list-disc list-inside text-sm">
-                                ${newLocations.map(loc => `<li>${loc.name} (${loc.road_section})</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                    }
-
-
-                    Swal.fire({
-                        title: `Riwayat Lokasi Perjanjian ${agreementNumber}`,
-                        html: htmlContent,
-                        icon: 'info',
-                        width: '600px',
-                        confirmButtonText: 'Tutup',
-                        customClass: {
-                            container: 'swal-wide',
-                            popup: 'swal2-popup'
-                        }
-                    });
+                wrapper.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    wrapper.style.cursor = 'grabbing';
+                    startX = e.pageX - wrapper.offsetLeft;
+                    scrollLeft = wrapper.scrollLeft;
                 });
-            });
+                wrapper.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    wrapper.style.cursor = 'grab';
+                });
+                wrapper.addEventListener('mouseup', () => {
+                    isDown = false;
+                    wrapper.style.cursor = 'grab';
+                });
+                wrapper.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - wrapper.offsetLeft;
+                    const walk = (x - startX) * 2; // Kecepatan scroll
+                    wrapper.scrollLeft = scrollLeft - walk;
+                });
+            }
         });
     </script>
 @endpush

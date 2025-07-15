@@ -3,302 +3,314 @@
 @section('title', 'Detail Perjanjian: ' . $agreement->agreement_number)
 
 @section('content')
+    {{-- CSS kustom untuk timeline horizontal --}}
+    <style>
+        .timeline-horizontal-container {
+            position: relative;
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 2rem 0;
+            cursor: grab;
+            scrollbar-width: thin;
+            scrollbar-color: #a0aec0 #e2e8f0;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .timeline-horizontal-container::-webkit-scrollbar-thumb {
+            background-color: #a0aec0;
+            border-radius: 10px;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            height: 220px;
+            padding: 0 40px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .timeline-line-h {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #e2e8f0;
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+
+        .timeline-items {
+            display: flex;
+            align-items: flex-start;
+            position: relative;
+            z-index: 2;
+        }
+
+        .timeline-item-h {
+            display: inline-flex;
+            flex-direction: column;
+            position: relative;
+            width: 280px;
+            margin: 0 20px;
+            padding-top: 50px;
+            white-space: normal;
+        }
+
+        .timeline-item-h.item-top {
+            padding-top: 0;
+            padding-bottom: 50px;
+            justify-content: flex-end;
+        }
+
+        .timeline-pin-h {
+            position: absolute;
+            left: 50%;
+            top: -12px;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #f8fafc;
+            background-clip: padding-box;
+        }
+
+        .item-top .timeline-pin-h {
+            top: auto;
+            bottom: -12px;
+        }
+
+        .timeline-item-h::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 40px;
+            background-color: #cbd5e1;
+            transform: translateX(-50%);
+        }
+
+        .item-top::after {
+            top: auto;
+            bottom: 0;
+        }
+
+        .timeline-content-h {
+            padding: 1rem;
+            background-color: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            text-align: left;
+        }
+    </style>
+
     <div class="container-fluid">
         <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Detail Perjanjian: {{ $agreement->agreement_number }}</h4>
+            <h4 class="text-default-900 text-2xl font-bold">Detail Perjanjian</h4>
             <div class="flex items-center gap-2">
-                <a href="{{ route('masterdata.agreements.pdf', $agreement) }}" target="_blank"
-                    class="px-6 py-2 rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-all">
-                    Cetak PDF
-                </a>
-                <a href="{{ route('masterdata.agreements.edit', $agreement) }}"
-                    class="px-6 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-all">
-                    Edit Perjanjian
-                </a>
                 <a href="{{ route('masterdata.agreements.index') }}"
-                    class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                    Kembali ke Daftar Perjanjian
-                </a>
+                    class="px-4 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">Kembali</a>
+                <a href="{{ route('masterdata.agreements.edit', $agreement->id) }}"
+                    class="px-4 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all"><i
+                        class="i-lucide-edit size-4 me-2"></i> Edit</a>
+                <a href="{{ route('masterdata.agreements.pdf', $agreement->id) }}" target="_blank"
+                    class="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 transition-all" title="Cetak PDF"><i
+                        class="i-lucide-printer size-4 me-2"></i> Cetak PKS</a>
             </div>
         </div>
 
-        {{-- SweetAlert2 Success/Error Messages --}}
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Sukses!</strong>
-                <span class="block sm:inline">{{ session('success') }}</span>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
-            </div>
-        @endif
-
-        <div class="card bg-white shadow rounded-lg p-6 mb-6">
-            <h5 class="text-lg font-semibold text-default-800 mb-4">Informasi Perjanjian</h5>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-medium text-default-700">Nomor Perjanjian:</p>
-                    <p class="text-default-900">{{ $agreement->agreement_number }}</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {{-- Kolom Kiri: Detail Utama --}}
+            <div class="lg:col-span-2">
+                <div class="card bg-white shadow rounded-lg p-6">
+                    {{-- Detail Header --}}
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h5 class="text-xl font-bold text-default-800">{{ $agreement->agreement_number }}</h5>
+                            <p class="text-sm text-default-500">
+                                Status: <span
+                                    class="font-semibold px-2 py-1 rounded-full text-xs @if ($agreement->status == 'active') bg-green-100 text-green-800 @elseif($agreement->status == 'expired') bg-amber-100 text-amber-800 @elseif($agreement->status == 'terminated') bg-red-100 text-red-800 @else bg-blue-100 text-blue-800 @endif">{{ ucfirst(str_replace('_', ' ', $agreement->status)) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <hr class="my-5">
+                    {{-- Detail Konten --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div>
+                            <p class="text-sm text-default-600">Pimpinan</p>
+                            <p class="font-semibold">{{ $agreement->leader->user->name ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-default-600">Koordinator Lapangan</p>
+                            <p class="font-semibold">{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-default-600">Tanggal Mulai</p>
+                            <p class="font-semibold">{{ $agreement->start_date->translatedFormat('d F Y') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-default-600">Tanggal Berakhir</p>
+                            <p class="font-semibold">{{ $agreement->end_date->translatedFormat('d F Y') }}</p>
+                        </div>
+                    </div>
+                    <hr class="my-5">
+                    {{-- Detail Lokasi --}}
+                    <div>
+                        <h6 class="text-md font-semibold text-default-800 mb-3">Lokasi Parkir Aktif</h6>
+                        <ul class="list-disc list-inside space-y-2">
+                            @forelse ($agreement->activeParkingLocations as $location)
+                                <li>{{ $location->name }} <span
+                                        class="text-sm text-default-500">({{ $location->roadSection->name ?? 'N/A' }})</span>
+                                </li>
+                            @empty
+                                <li>Tidak ada lokasi parkir aktif.</li>
+                            @endforelse
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Pimpinan (PIHAK PERTAMA):</p>
-                    <p class="text-default-900">{{ $agreement->leader->user->name ?? 'N/A' }} (NIP:
-                        {{ $agreement->leader->employee_number ?? 'N/A' }})</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Koordinator Lapangan (PIHAK KEDUA):</p>
-                    <p class="text-default-900">{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }} (No. KTP:
-                        {{ $agreement->fieldCoordinator->id_card_number ?? 'N/A' }})</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Tanggal Mulai Perjanjian:</p>
-                    <p class="text-default-900">{{ $agreement->start_date->format('d M Y') }}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Tanggal Akhir Perjanjian:</p>
-                    <p class="text-default-900">{{ $agreement->end_date->format('d M Y') }}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Tanggal Ditandatangani:</p>
-                    <p class="text-default-900">{{ $agreement->signed_date->format('d M Y') }}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Jumlah Setoran Harian:</p>
-                    <p class="text-default-900">Rp {{ number_format($agreement->daily_deposit_amount, 0, ',', '.') }}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-default-700">Status Perjanjian:</p>
-                    <p class="text-default-900">
-                        <span
-                            class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium {{ $agreement->status == 'active'
-                                ? 'bg-green-100 text-green-800'
-                                : ($agreement->status == 'expired'
-                                    ? 'bg-red-100 text-red-800'
-                                    : ($agreement->status == 'terminated'
-                                        ? 'bg-gray-100 text-gray-800'
-                                        : 'bg-yellow-100 text-yellow-800')) }}">
-                            {{ ucfirst(str_replace('_', ' ', $agreement->status)) }}
-                        </span>
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <div class="card bg-white shadow rounded-lg p-6 mb-6">
-            <h5 class="text-lg font-semibold text-default-800 mb-4">Lokasi Parkir Terkait</h5>
-            {{-- Search input for Parking Locations --}}
-            <div class="mb-4">
-                <input type="text" id="parking-location-search" placeholder="Cari lokasi parkir terkait..."
-                    class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500">
             </div>
 
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left text-default-500" id="parking-locations-table">
-                    <thead class="text-xs text-default-700 uppercase bg-default-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Nama Lokasi</th>
-                            <th scope="col" class="px-6 py-3">Ruas Jalan</th>
-                            <th scope="col" class="px-6 py-3">Status Lokasi</th>
-                            <th scope="col" class="px-6 py-3">Tanggal Ditugaskan</th>
-                            <th scope="col" class="px-6 py-3">Aksi</th> {{-- New column for action --}}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($agreement->activeParkingLocations as $location)
-                            <tr class="bg-white border-b hover:bg-default-50">
-                                <td class="px-6 py-4 font-medium text-default-900 whitespace-nowrap">{{ $location->name }}
-                                </td>
-                                <td class="px-6 py-4">{{ $location->roadSection->name ?? 'N/A' }}</td>
-                                <td class="px-6 py-4">
+            {{-- Kolom Kanan: Riwayat Setoran --}}
+            <div>
+                <div class="card bg-white shadow rounded-lg p-6 flex flex-col h-full">
+                    <h6 class="text-md font-semibold text-default-800 mb-4">Riwayat Setoran</h6>
+                    {{-- ✅ PERUBAHAN 1: Membuat area ini bisa di-scroll --}}
+                    <div class="flex-grow space-y-3 max-h-80 overflow-y-auto pr-2">
+                        @forelse ($agreement->depositTransactions->sortByDesc('deposit_date') as $transaction)
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="font-medium text-default-800">Rp
+                                        {{ number_format($transaction->amount, 0, ',', '.') }}</p>
+                                    <p class="text-xs text-default-500">
+                                        {{ $transaction->deposit_date->translatedFormat('d M Y') }}</p>
+                                </div>
+                                @if ($transaction->is_validated)
                                     <span
-                                        class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium {{ $location->pivot->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ ucfirst(str_replace('_', ' ', $location->pivot->status)) }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">{{ $location->pivot->assigned_date->format('d M Y') }}</td>
-                                <td class="px-6 py-4">
-                                    {{-- Form untuk detach lokasi parkir --}}
-                                    <form id="detach-form-{{ $agreement->id }}-{{ $location->id }}"
-                                        action="{{ route('masterdata.agreements.detach-parking-location', [$agreement->id, $location->id]) }}"
-                                        method="POST" style="display: none;">
-                                        @csrf
-                                        {{-- @method('POST') tidak diperlukan karena route sudah POST --}}
-                                    </form>
-                                    <button type="button"
-                                        class="font-medium text-red-600 hover:underline detach-parking-location-btn"
-                                        data-agreement-id="{{ $agreement->id }}" data-location-id="{{ $location->id }}"
-                                        data-location-name="{{ $location->name }}">
-                                        Keluar
-                                    </button>
-                                </td>
-                            </tr>
+                                        class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Tervalidasi</span>
+                                @else
+                                    <span
+                                        class="px-2 py-1 text-xs font-semibold text-amber-800 bg-amber-100 rounded-full">Pending</span>
+                                @endif
+                            </div>
                         @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="5" class="px-6 py-4 text-center text-default-500">Tidak ada lokasi parkir
-                                    terkait.</td> {{-- Update colspan --}}
-                            </tr>
+                            <p class="text-sm text-center text-default-500 py-4">Belum ada transaksi.</p>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                    {{-- ✅ PERUBAHAN 2: Menambahkan footer untuk total setoran --}}
+                    <div class="border-t border-default-200 mt-4 pt-4">
+                        <p class="text-sm text-default-600">Total Setoran Tervalidasi ({{ now()->year }})</p>
+                        <p class="text-lg font-bold text-default-900">Rp
+                            {{ number_format($totalDepositThisYear, 0, ',', '.') }}</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="card bg-white shadow rounded-lg p-6">
-            <h5 class="text-lg font-semibold text-default-800 mb-4">Riwayat Perjanjian</h5>
-            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left text-default-500">
-                    <thead class="text-xs text-default-700 uppercase bg-default-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3">Tipe Event</th>
-                            <th scope="col" class="px-6 py-3">Perubahan Oleh</th>
-                            <th scope="col" class="px-6 py-3">Catatan</th>
-                            <th scope="col" class="px-6 py-3">Tanggal</th>
-                            <th scope="col" class="px-6 py-3">Detail Perubahan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($agreement->histories as $history)
-                            <tr class="bg-white border-b hover:bg-default-50">
-                                <td class="px-6 py-4">{{ ucfirst(str_replace('_', ' ', $history->event_type)) }}</td>
-                                <td class="px-6 py-4">{{ $history->changer->name ?? 'Sistem' }}</td>
-                                <td class="px-6 py-4">{{ $history->notes ?? '-' }}</td>
-                                <td class="px-6 py-4">{{ $history->created_at->format('d M Y H:i') }}</td>
-                                <td class="px-6 py-4">
-                                    @if ($history->old_value || $history->new_value)
-                                        <button type="button"
-                                            class="text-blue-600 hover:underline show-history-details-btn"
-                                            data-old-value="{{ json_encode($history->old_value) }}"
-                                            data-new-value="{{ json_encode($history->new_value) }}">
-                                            Lihat Detail
-                                        </button>
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                            </tr>
+        {{-- Bagian Timeline Riwayat Perjanjian --}}
+        <div class="card bg-white shadow rounded-lg p-6 mt-6">
+            <h5 class="text-lg font-semibold text-default-800 mb-2 text-center">Riwayat Perjanjian</h5>
+            <div class="timeline-horizontal-container">
+                <div class="timeline-wrapper">
+                    <div class="timeline-line-h"></div>
+                    <div class="timeline-items">
+                        @forelse ($agreement->histories->sortByDesc('created_at') as $key => $history)
+                            @php
+                                $positionClass = $key % 2 != 0 ? 'item-top' : '';
+                                $icon = 'i-lucide-file-text';
+                                $color = 'bg-gray-400';
+                                switch ($history->event_type) {
+                                    case 'agreement_created':
+                                        $icon = 'i-lucide-file-plus-2';
+                                        $color = 'bg-primary-500';
+                                        break;
+                                    case 'location_added':
+                                        $icon = 'i-lucide-map-pin';
+                                        $color = 'bg-green-500';
+                                        break;
+                                    case 'location_removed':
+                                        $icon = 'i-lucide-map-pin-off';
+                                        $color = 'bg-amber-500';
+                                        break;
+                                    case 'deposit_changed':
+                                        $icon = 'i-lucide-receipt';
+                                        $color = 'bg-blue-500';
+                                        break;
+                                    case 'status_changed':
+                                        $icon = 'i-lucide-toggle-right';
+                                        $color = 'bg-teal-500';
+                                        break;
+                                }
+                            @endphp
+                            <div class="timeline-item-h {{ $positionClass }}">
+                                <div class="timeline-content-h">
+                                    <div class="flex justify-between items-center">
+                                        <p class="font-semibold text-sm">{{ $history->creator->name ?? 'Sistem' }}</p>
+                                        <p class="text-xs text-default-400">
+                                            {{ $history->created_at->translatedFormat('d M Y, H:i') }}</p>
+                                    </div>
+                                    <p class="text-sm mt-1">{{ $history->notes }}</p>
+                                </div>
+                                <div class="timeline-pin-h {{ $color }}"><i
+                                        class="{{ $icon }} text-white size-3"></i></div>
+                            </div>
                         @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="5" class="px-6 py-4 text-center text-default-500">Tidak ada riwayat
-                                    perjanjian.</td>
-                            </tr>
+                            <div class="text-center w-full py-8 absolute">
+                                <p>Belum ada riwayat tercatat.</p>
+                            </div>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
 @endsection
 
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- SweetAlert2 for History Details ---
-            document.querySelectorAll('.show-history-details-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const oldValue = JSON.parse(this.dataset.oldValue);
-                    const newValue = JSON.parse(this.dataset.newValue);
+        // Logika Drag to Scroll untuk timeline
+        const wrapper = document.querySelector('.timeline-horizontal-container');
+        if (wrapper) {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
 
-                    let htmlContent = '<div>';
-                    htmlContent += '<h5 class="text-lg font-bold mb-2">Perubahan Detail:</h5>';
-
-                    if (oldValue) {
-                        htmlContent += '<p class="font-semibold mt-4 mb-1">Nilai Lama:</p>';
-                        htmlContent +=
-                            '<pre class="bg-gray-100 p-2 rounded text-sm overflow-auto max-h-40">' +
-                            JSON.stringify(oldValue, null, 2) + '</pre>';
-                    }
-                    if (newValue) {
-                        htmlContent += '<p class="font-semibold mt-4 mb-1">Nilai Baru:</p>';
-                        htmlContent +=
-                            '<pre class="bg-gray-100 p-2 rounded text-sm overflow-auto max-h-40">' +
-                            JSON.stringify(newValue, null, 2) + '</pre>';
-                    }
-                    htmlContent += '</div>';
-
-                    Swal.fire({
-                        title: 'Detail Riwayat',
-                        html: htmlContent,
-                        icon: 'info',
-                        width: '600px',
-                        confirmButtonText: 'Tutup',
-                        customClass: {
-                            container: 'swal-wide',
-                            popup: 'swal2-popup' // Add this class to your custom CSS if needed
-                        }
-                    });
-                });
+            wrapper.addEventListener('mousedown', (e) => {
+                isDown = true;
+                wrapper.style.cursor = 'grabbing';
+                startX = e.pageX - wrapper.offsetLeft;
+                scrollLeft = wrapper.scrollLeft;
             });
-
-            // --- Client-side Search for Parking Locations Table ---
-            const searchInput = document.getElementById('parking-location-search');
-            const parkingLocationsTable = document.getElementById(
-                'parking-locations-table'); // Get the table itself
-            const tableBody = parkingLocationsTable ? parkingLocationsTable.querySelector('tbody') :
-                null; // Get tbody from the table
-            const tableRows = tableBody ? Array.from(tableBody.querySelectorAll('tr')) : [];
-
-            console.log('Search Input:', searchInput); // Debugging: Check if search input element is found
-            console.log('Parking Locations Table:',
-                parkingLocationsTable); // Debugging: Check if table element is found
-            console.log('Table Body:', tableBody); // Debugging: Check if tbody element is found
-            console.log('Table Rows (initial):', tableRows); // Debugging: Check if rows are found
-
-            if (searchInput && tableBody && tableRows.length > 0) {
-                searchInput.addEventListener('keyup', function() {
-                    const searchTerm = this.value.toLowerCase();
-                    console.log('Search term:', searchTerm); // Debugging: Log current search term
-
-                    tableRows.forEach(row => {
-                        let rowText = row.textContent.toLowerCase();
-                        console.log('Row text:', rowText); // Debugging: Log row content
-                        if (rowText.includes(searchTerm)) {
-                            row.style.display = ''; // Show row
-                        } else {
-                            row.style.display = 'none'; // Hide row
-                        }
-                    });
-                });
-            } else {
-                console.warn('Search functionality not initialized. Missing elements or no rows found.');
-            }
-
-            // --- SweetAlert2 and Detach Logic for "Keluar" Button ---
-            document.addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('detach-parking-location-btn')) {
-                    e.preventDefault();
-
-                    const agreementId = e.target.dataset.agreementId;
-                    const locationId = e.target.dataset.locationId;
-                    const locationName = e.target.dataset.locationName;
-
-                    if (typeof Swal === 'undefined') {
-                        console.error('SweetAlert2 (Swal) is not loaded.');
-                        alert(
-                            `Gagal mengeluarkan lokasi parkir ${locationName}. SweetAlert2 tidak ditemukan.`
-                        );
-                        return;
-                    }
-
-                    Swal.fire({
-                        title: 'Konfirmasi Pengeluaran Lokasi?',
-                        text: `Anda yakin ingin mengeluarkan lokasi parkir "${locationName}" dari perjanjian ini? Status lokasi akan berubah menjadi Tersedia.`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Ya, Keluarkan!',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            document.getElementById(`detach-form-${agreementId}-${locationId}`)
-                                .submit();
-                        }
-                    });
-                }
+            wrapper.addEventListener('mouseleave', () => {
+                isDown = false;
+                wrapper.style.cursor = 'grab';
             });
-        });
+            wrapper.addEventListener('mouseup', () => {
+                isDown = false;
+                wrapper.style.cursor = 'grab';
+            });
+            wrapper.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - wrapper.offsetLeft;
+                const walk = (x - startX) * 2;
+                wrapper.scrollLeft = scrollLeft - walk;
+            });
+        }
     </script>
 @endpush

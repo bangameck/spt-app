@@ -2,11 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agreement;
+use App\Models\DepositTransaction;
+use App\Models\FieldCoordinator;
+use App\Models\ParkingLocation;
+use App\Models\RoadSection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+
     public function index()
     {
         $user = Auth::user();
@@ -26,23 +33,84 @@ class DashboardController extends Controller
         }
     }
 
+    /**
+     * Menampilkan dashboard utama untuk Admin.
+     */
     public function adminDashboard()
     {
-        return view('admin.dashboard'); // Buat view ini nanti
+        // 1. Data untuk Info Cards
+        $totalCoordinators = FieldCoordinator::count();
+        $totalRoadSections = RoadSection::count();
+        $totalActiveAgreements = Agreement::where('status', 'active')->count();
+        $totalParkingLocationsInPKS = DB::table('agreement_parking_locations as apl')
+            ->join('agreements as a', 'apl.agreement_id', '=', 'a.id')
+            ->where('a.status', 'active')->whereNull('a.deleted_at')
+            ->distinct('apl.parking_location_id')->count('apl.parking_location_id');
+
+        // 2. Data untuk Setoran
+        $todayValidatedDeposit = DepositTransaction::where('is_validated', true)->whereDate('deposit_date', today())->sum('amount');
+        $currentYearValidatedDeposit = DepositTransaction::where('is_validated', true)->whereYear('deposit_date', now()->year)->sum('amount');
+
+        // 3. Data untuk Grafik Setoran Bulanan (Tahun Ini)
+        $monthlyDeposits = DepositTransaction::select(
+            DB::raw('MONTH(deposit_date) as month'),
+            DB::raw('SUM(amount) as total')
+        )
+            ->where('is_validated', true)->whereYear('deposit_date', now()->year)
+            ->groupBy('month')->orderBy('month')->get()
+            ->pluck('total', 'month')->all();
+
+        $chartLabels = [];
+        $mainChartData = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $chartLabels[] = \Carbon\Carbon::create()->month($m)->translatedFormat('F');
+            $mainChartData[] = $monthlyDeposits[$m] ?? 0;
+        }
+
+        // 4. ✅ DATA BARU UNTUK MINI CHARTS (Contoh data 7 hari)
+        $miniChartData1 = [rand(10, 50), rand(20, 60), rand(30, 70), rand(20, 80), rand(50, 90), rand(60, 80), rand(70, 100)];
+        $miniChartData2 = [rand(70, 100), rand(60, 80), rand(50, 90), rand(40, 70), rand(30, 60), rand(20, 50), rand(10, 40)];
+        $miniChartData3 = [rand(10, 40), rand(30, 60), rand(20, 50), rand(50, 90), rand(40, 70), rand(60, 80), rand(70, 100)];
+        $miniChartData4 = [rand(70, 100), rand(50, 80), rand(60, 90), rand(30, 60), rand(20, 50), rand(40, 70), rand(10, 40)];
+
+
+        return view('admin.dashboard', compact(
+            'totalCoordinators',
+            'totalRoadSections',
+            'totalActiveAgreements',
+            'totalParkingLocationsInPKS',
+            'todayValidatedDeposit',
+            'currentYearValidatedDeposit',
+            'chartLabels',
+            'mainChartData',
+            'miniChartData1',
+            'miniChartData2',
+            'miniChartData3',
+            'miniChartData4'
+        ));
     }
 
+    /**
+     * Mencari perjanjian berdasarkan nomor dan redirect ke halaman detail.
+     */
+    public function findAgreement(Request $request)
+    {
+        $request->validate(['agreement_number' => 'required|string']);
+        $agreement = Agreement::where('agreement_number', $request->agreement_number)->first();
+        if ($agreement) {
+            return redirect()->route('masterdata.agreements.show', $agreement->id);
+        }
+        return redirect()->back()->with('error', 'Perjanjian dengan nomor tersebut tidak ditemukan.');
+    }
+
+    // Method dashboard untuk role lain bisa tetap di sini
     public function leaderDashboard()
-    {
-        return view('leader.dashboard'); // Buat view ini nanti
+    { /* ... */
     }
-
     public function fieldCoordinatorDashboard()
-    {
-        return view('field_coordinator.dashboard'); // Buat view ini nanti
+    { /* ... */
     }
-
     public function staffDashboard()
-    {
-        return view('staff.dashboard'); // Buat view ini nanti
+    { /* ... */
     }
 }

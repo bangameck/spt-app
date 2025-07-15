@@ -12,6 +12,7 @@ use App\Http\Controllers\MasterData\AgreementController;
 use App\Http\Controllers\MasterData\DepositTransactionController;
 use App\Http\Controllers\MasterData\DepositReportController;
 use App\Http\Controllers\MasterData\AgreementHistoryController;
+use App\Http\Controllers\MasterData\BludBankAccountController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -31,10 +32,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Dashboard Admin
             Route::get('/dashboard', [DashboardController::class, 'adminDashboard'])->name('dashboard');
 
+            // ✅ TAMBAHKAN ROUTE PENCARIAN INI
+            Route::post('/agreements/find', [DashboardController::class, 'findAgreement'])->name('agreements.find');
+
             // Manajemen Pengguna (CRUD)
             Route::resource('users', UserController::class);
             Route::resource('leaders', LeaderController::class);
             Route::resource('field-coordinators', FieldCoordinatorController::class);
+            // ✅ TAMBAHKAN BARIS INI
+            Route::resource('blud-bank-accounts', BludBankAccountController::class);
         });
     // --- END: Route Khusus Admin ---
 
@@ -114,6 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // START: Route untuk Generate PDF Riwayat Perjanjian
         Route::get('agreement-histories/{history}/pdf', [AgreementHistoryController::class, 'generatePdf'])->name('agreement-histories.pdf');
         // END: Route untuk Generate PDF Riwayat Perjanjian
+
 
     });
     // END: ROUTES BARU UNTUK ADMIN DAN STAFF (MasterData)
