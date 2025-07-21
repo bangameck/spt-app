@@ -16,27 +16,28 @@ class ParkingLocationController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil query pencarian dari request
         $search = $request->input('search');
 
-        // Mulai query ParkingLocation dengan eager loading roadSection
-        $query = ParkingLocation::with('roadSection');
+        $query = ParkingLocation::with([
+            'roadSection',
+            'agreements' => function ($query) {
+                // ✅ PERBAIKAN DI SINI: Tentukan nama tabel secara eksplisit
+                $query->where('agreements.status', 'active')->with('fieldCoordinator.user');
+            }
+        ]);
 
-        // Terapkan filter pencarian jika ada
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('status', 'like', '%' . $search . '%') // Tambahkan pencarian berdasarkan status
+                    ->orWhere('status', 'like', '%' . $search . '%')
                     ->orWhereHas('roadSection', function ($roadSectionQuery) use ($search) {
                         $roadSectionQuery->where('name', 'like', '%' . $search . '%');
                     });
             });
         }
 
-        // Ambil data lokasi parkir dengan paginasi (misal 10 per halaman)
-        $parkingLocations = $query->latest()->paginate(10);
+        $parkingLocations = $query->latest()->paginate(15);
 
-        // Kirimkan query pencarian ke view agar input search tetap terisi
         return view('staff.parking_locations.index', compact('parkingLocations', 'search'));
     }
 
@@ -49,6 +50,11 @@ class ParkingLocationController extends Controller
         return view('staff.parking_locations.create', compact('roadSections'));
     }
 
+    public function getRoadSectionsByZone($zone)
+    {
+        $roadSections = RoadSection::where('zone', $zone)->orderBy('name', 'asc')->get();
+        return response()->json($roadSections);
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -64,13 +70,17 @@ class ParkingLocationController extends Controller
                     return $query->where('road_section_id', $request->road_section_id);
                 }),
             ],
-            'status' => 'required|string|in:tersedia,tidak_tersedia', // VALIDASI DIUBAH
+            // Status tidak perlu di form, defaultnya 'tersedia'
         ]);
 
-        ParkingLocation::create($validatedData);
+        ParkingLocation::create([
+            'name' => $validatedData['name'],
+            'road_section_id' => $validatedData['road_section_id'],
+            'status' => 'tersedia', // Status default saat dibuat
+        ]);
 
         return redirect()->route('masterdata.parking-locations.index')
-            ->with('success', 'Lokasi parkir "' . $validatedData['name'] . '" berhasil ditambahkan!');
+            ->with('success', 'Lokasi parkir ' . $validatedData['name'] . ' berhasil ditambahkan!');
     }
 
     /**
@@ -107,13 +117,12 @@ class ParkingLocationController extends Controller
                     return $query->where('road_section_id', $request->road_section_id);
                 })->ignore($parkingLocation->id), // Abaikan record saat ini
             ],
-            'status' => 'required|string|in:tersedia,tidak_tersedia', // VALIDASI DIUBAH
         ]);
 
         $parkingLocation->update($validatedData);
 
         return redirect()->route('masterdata.parking-locations.index')
-            ->with('success', 'Lokasi parkir "' . $parkingLocation->name . '" berhasil diperbarui!');
+            ->with('success', 'Lokasi parkir ' . $parkingLocation->name . ' berhasil diperbarui!');
     }
 
     /**

@@ -415,22 +415,34 @@
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="../../assets/img/avatars/1.png" alt="avatar" class="rounded-circle" />
+                        {{-- ✅ PERBAIKAN UTAMA DI SINI --}}
+                        @if (Auth::user()->img && file_exists(public_path(Auth::user()->img)))
+                            <img src="{{ asset(Auth::user()->img) }}" alt="Avatar" class="rounded-circle" />
+                        @else
+                            <img src="{{ asset('assets/img/avatars/1.png') }}" alt="Avatar"
+                                class="rounded-circle" />
+                        @endif
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end mt-3 py-2">
                     <li>
-                        <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <a class="dropdown-item" href="{{ route('profile.edit') }}">
                             <div class="d-flex align-items-center">
-                                <div class="flex-shrink-0 me-2">
+                                <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="../../assets/img/avatars/1.png" alt="alt"
-                                            class="w-px-40 h-auto rounded-circle" />
+                                        @if (Auth::user()->img && file_exists(public_path(Auth::user()->img)))
+                                            <img src="{{ asset(Auth::user()->img) }}" alt="Avatar"
+                                                class="rounded-circle" />
+                                        @else
+                                            <img src="{{ asset('assets/img/avatars/1.png') }}" alt
+                                                class="rounded-circle" />
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <h6 class="mb-0 small">John Doe</h6>
-                                    <small class="text-body-secondary">Admin</small>
+                                    <span class="fw-medium d-block">{{ Auth::user()->name }}</span>
+                                    <small
+                                        class="text-muted">{{ Auth::user()->role ? ucfirst(str_replace('_', ' ', Auth::user()->role)) : 'User' }}</small>
                                 </div>
                             </div>
                         </a>
@@ -476,10 +488,15 @@
                     </li>
                     <li>
                         <div class="d-grid px-4 pt-2 pb-1">
-                            <a class="btn btn-sm btn-danger d-flex" href="auth-login-cover.html" target="_blank">
-                                <small class="align-middle">Logout</small>
-                                <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
-                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <a class="btn btn-sm btn-danger d-flex" href="{{ route('logout') }}"
+                                    onclick="event.preventDefault(); this.closest('form').submit();">
+                                    <small class="align-middle">Logout</small>
+                                    <i class="icon-base ri ri-logout-box-r-line ms-2 icon-16px"></i>
+                                </a>
+                            </form>
+
                         </div>
                     </li>
                 </ul>

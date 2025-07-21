@@ -3,78 +3,130 @@
 @section('title', 'Edit Rekening BLUD')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Edit Rekening BLUD</h4>
-            <a href="{{ route('admin.blud-bank-accounts.index') }}"
-                class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar
-            </a>
+    {{-- Page Title & Breadcrumb --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Edit Rekening BLUD</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.blud-bank-accounts.index') }}">Rekening BLUD</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <ul class="mt-2 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
+    <div class="card">
+        <div class="card-body">
             <form action="{{ route('admin.blud-bank-accounts.update', $account->id) }}" method="POST">
                 @csrf
-                @method('PUT')
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="bank_name" class="block text-sm font-medium text-default-700 mb-2">Nama Bank</label>
-                        <input type="text" name="bank_name" id="bank_name" class="form-input w-full"
-                            value="{{ old('bank_name', $account->bank_name) }}" required>
+                @method('PATCH')
+                <div class="row g-6">
+                    {{-- Nama Bank --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="bank_name" name="bank_name"
+                                placeholder="Contoh: Bank BRI" value="{{ old('bank_name', $account->bank_name) }}"
+                                required />
+                            <label for="bank_name">Nama Bank</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="account_number" class="block text-sm font-medium text-default-700 mb-2">Nomor
-                            Rekening</label>
-                        <input type="text" name="account_number" id="account_number" class="form-input w-full"
-                            value="{{ old('account_number', $account->account_number) }}" required>
+
+                    {{-- Nomor Rekening --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="account_number" name="account_number"
+                                placeholder="Masukkan nomor rekening"
+                                value="{{ old('account_number', $account->account_number) }}" required />
+                            <label for="account_number">Nomor Rekening</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="account_name" class="block text-sm font-medium text-default-700 mb-2">Atas Nama</label>
-                        <input type="text" name="account_name" id="account_name" class="form-input w-full"
-                            value="{{ old('account_name', $account->account_name) }}" required>
+
+                    {{-- Atas Nama --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="account_name" name="account_name"
+                                placeholder="Masukkan nama pemilik rekening"
+                                value="{{ old('account_name', $account->account_name) }}" required />
+                            <label for="account_name">Atas Nama</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="start_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Mulai
-                            Efektif</label>
-                        <input type="date" name="start_date" id="start_date" class="form-input w-full"
-                            value="{{ old('start_date', $account->start_date->format('Y-m-d')) }}" required>
+
+                    {{-- Tanggal Mulai Efektif --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="date" class="form-control" id="start_date" name="start_date"
+                                value="{{ old('start_date', $account->start_date->format('Y-m-d')) }}" required />
+                            <label for="start_date">Tanggal Mulai Efektif</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="end_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Berakhir
-                            (Opsional)</label>
-                        <input type="date" name="end_date" id="end_date" class="form-input w-full"
-                            value="{{ old('end_date', $account->end_date ? $account->end_date->format('Y-m-d') : '') }}">
+
+                    {{-- Tanggal Berakhir --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="date" class="form-control" id="end_date" name="end_date"
+                                value="{{ old('end_date', $account->end_date ? $account->end_date->format('Y-m-d') : '') }}" />
+                            <label for="end_date">Tanggal Berakhir (Opsional)</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="is_active" class="block text-sm font-medium text-default-700 mb-2">Status</label>
-                        <select name="is_active" id="is_active" class="form-select w-full">
-                            <option value="1" {{ old('is_active', $account->is_active) == 1 ? 'selected' : '' }}>Aktif
-                            </option>
-                            <option value="0" {{ old('is_active', $account->is_active) == 0 ? 'selected' : '' }}>Tidak
-                                Aktif</option>
-                        </select>
-                        <small class="text-xs text-amber-600">Mengaktifkan rekening ini akan menonaktifkan rekening aktif
-                            lainnya.</small>
+
+                    {{-- ✅ PERUBAHAN: Status menggunakan Switch --}}
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
+                                {{ old('is_active', $account->is_active) ? 'checked' : '' }}>
+                            <label class="form-check-label" for="is_active">Jadikan Rekening Aktif?</label>
+                        </div>
+                        {{-- Input tersembunyi untuk memastikan nilai '0' terkirim jika switch tidak dicentang --}}
+                        <input type="hidden" name="is_active" value="0" />
+                    </div>
+
+                </div>
+                <div class="col-12 mt-4">
+                    <div class="alert alert-warning d-flex align-items-center" role="alert">
+                        <span class="alert-icon rounded-3"><i class="icon-base ri ri-alert-line ri-22px"></i></span>
+                        <div class="alert-text">
+                            Mengaktifkan rekening ini akan menonaktifkan rekening aktif lainnya secara otomatis.
+                        </div>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700">Simpan
-                        Perubahan</button>
-                    <a href="{{ route('admin.blud-bank-accounts.index') }}" class="px-6 py-2 rounded-md border">Batal</a>
+
+                {{-- Tombol Aksi --}}
+                <div class="pt-6 text-end">
+                    <a href="{{ route('admin.blud-bank-accounts.index') }}" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        // Script khusus untuk form ini (jika ada di masa depan)
+        document.addEventListener("DOMContentLoaded", function() {
+            const isActiveSwitch = document.querySelector('#is_active');
+            const hiddenInput = document.querySelector('input[type="hidden"][name="is_active"]');
+
+            isActiveSwitch.addEventListener('change', function() {
+                // Trik untuk mengirim nilai 0 jika checkbox tidak dicentang
+                hiddenInput.disabled = this.checked;
+            });
+
+            // Panggil saat load untuk set kondisi awal
+            hiddenInput.disabled = isActiveSwitch.checked;
+        });
+    </script>
+@endpush

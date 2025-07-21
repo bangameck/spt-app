@@ -3,7 +3,7 @@
 @section('title', 'Detail Perjanjian: ' . $agreement->agreement_number)
 
 @section('content')
-    {{-- CSS kustom untuk timeline horizontal --}}
+    {{-- CSS untuk timeline horizontal --}}
     <style>
         .timeline-horizontal-container {
             position: relative;
@@ -13,21 +13,21 @@
             padding: 2rem 0;
             cursor: grab;
             scrollbar-width: thin;
-            scrollbar-color: #a0aec0 #e2e8f0;
+            scrollbar-color: #a0aec0 #e2e8f0
         }
 
         .timeline-horizontal-container::-webkit-scrollbar {
-            height: 8px;
+            height: 8px
         }
 
         .timeline-horizontal-container::-webkit-scrollbar-track {
             background: #e2e8f0;
-            border-radius: 10px;
+            border-radius: 10px
         }
 
         .timeline-horizontal-container::-webkit-scrollbar-thumb {
             background-color: #a0aec0;
-            border-radius: 10px;
+            border-radius: 10px
         }
 
         .timeline-wrapper {
@@ -35,7 +35,7 @@
             height: 220px;
             padding: 0 40px;
             white-space: nowrap;
-            display: inline-block;
+            display: inline-block
         }
 
         .timeline-line-h {
@@ -46,14 +46,14 @@
             height: 4px;
             background-color: #e2e8f0;
             transform: translateY(-50%);
-            z-index: 1;
+            z-index: 1
         }
 
         .timeline-items {
             display: flex;
             align-items: flex-start;
             position: relative;
-            z-index: 2;
+            z-index: 2
         }
 
         .timeline-item-h {
@@ -63,13 +63,13 @@
             width: 280px;
             margin: 0 20px;
             padding-top: 50px;
-            white-space: normal;
+            white-space: normal
         }
 
         .timeline-item-h.item-top {
             padding-top: 0;
             padding-bottom: 50px;
-            justify-content: flex-end;
+            justify-content: flex-end
         }
 
         .timeline-pin-h {
@@ -85,12 +85,12 @@
             align-items: center;
             justify-content: center;
             border: 3px solid #f8fafc;
-            background-clip: padding-box;
+            background-clip: padding-box
         }
 
         .item-top .timeline-pin-h {
             top: auto;
-            bottom: -12px;
+            bottom: -12px
         }
 
         .timeline-item-h::after {
@@ -101,195 +101,244 @@
             width: 2px;
             height: 40px;
             background-color: #cbd5e1;
-            transform: translateX(-50%);
+            transform: translateX(-50%)
         }
 
         .item-top::after {
             top: auto;
-            bottom: 0;
+            bottom: 0
         }
 
         .timeline-content-h {
             padding: 1rem;
             background-color: white;
-            border-radius: 0.5rem;
+            border-radius: .5rem;
             border: 1px solid #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
-            text-align: left;
+            box-shadow: 0 4px 6px -1px #0000001a, 0 2px 4px -2px #0000001a;
+            text-align: left
         }
     </style>
 
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Detail Perjanjian</h4>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('masterdata.agreements.index') }}"
-                    class="px-4 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">Kembali</a>
-                <a href="{{ route('masterdata.agreements.edit', $agreement->id) }}"
-                    class="px-4 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all"><i
-                        class="i-lucide-edit size-4 me-2"></i> Edit</a>
-                <a href="{{ route('masterdata.agreements.pdf', $agreement->id) }}" target="_blank"
-                    class="px-4 py-2 rounded-md text-white bg-red-600 hover:bg-red-700 transition-all" title="Cetak PDF"><i
-                        class="i-lucide-printer size-4 me-2"></i> Cetak PKS</a>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {{-- Kolom Kiri: Detail Utama --}}
-            <div class="lg:col-span-2">
-                <div class="card bg-white shadow rounded-lg p-6">
-                    {{-- Detail Header --}}
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h5 class="text-xl font-bold text-default-800">{{ $agreement->agreement_number }}</h5>
-                            <p class="text-sm text-default-500">
-                                Status: <span
-                                    class="font-semibold px-2 py-1 rounded-full text-xs @if ($agreement->status == 'active') bg-green-100 text-green-800 @elseif($agreement->status == 'expired') bg-amber-100 text-amber-800 @elseif($agreement->status == 'terminated') bg-red-100 text-red-800 @else bg-blue-100 text-blue-800 @endif">{{ ucfirst(str_replace('_', ' ', $agreement->status)) }}</span>
-                            </p>
-                        </div>
-                    </div>
-                    <hr class="my-5">
-                    {{-- Detail Konten --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                        <div>
-                            <p class="text-sm text-default-600">Pimpinan</p>
-                            <p class="font-semibold">{{ $agreement->leader->user->name ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-default-600">Koordinator Lapangan</p>
-                            <p class="font-semibold">{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-default-600">Tanggal Mulai</p>
-                            <p class="font-semibold">{{ $agreement->start_date->translatedFormat('d F Y') }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-default-600">Tanggal Berakhir</p>
-                            <p class="font-semibold">{{ $agreement->end_date->translatedFormat('d F Y') }}</p>
-                        </div>
-                    </div>
-                    <hr class="my-5">
-                    {{-- Detail Lokasi --}}
-                    <div>
-                        <h6 class="text-md font-semibold text-default-800 mb-3">Lokasi Parkir Aktif</h6>
-                        <ul class="list-disc list-inside space-y-2">
-                            @forelse ($agreement->activeParkingLocations as $location)
-                                <li>{{ $location->name }} <span
-                                        class="text-sm text-default-500">({{ $location->roadSection->name ?? 'N/A' }})</span>
-                                </li>
-                            @empty
-                                <li>Tidak ada lokasi parkir aktif.</li>
-                            @endforelse
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Kolom Kanan: Riwayat Setoran --}}
-            <div>
-                <div class="card bg-white shadow rounded-lg p-6 flex flex-col h-full">
-                    <h6 class="text-md font-semibold text-default-800 mb-4">Riwayat Setoran</h6>
-                    {{-- ✅ PERUBAHAN 1: Membuat area ini bisa di-scroll --}}
-                    <div class="flex-grow space-y-3 max-h-80 overflow-y-auto pr-2">
-                        @forelse ($agreement->depositTransactions->sortByDesc('deposit_date') as $transaction)
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="font-medium text-default-800">Rp
-                                        {{ number_format($transaction->amount, 0, ',', '.') }}</p>
-                                    <p class="text-xs text-default-500">
-                                        {{ $transaction->deposit_date->translatedFormat('d M Y') }}</p>
-                                </div>
-                                @if ($transaction->is_validated)
-                                    <span
-                                        class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Tervalidasi</span>
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="row">
+            <div class="col-xl-4 col-lg-5 col-md-5 order-1 order-md-0">
+                <div class="card mb-6">
+                    <div class="card-body pt-12">
+                        <div class="user-avatar-section">
+                            <div class="d-flex align-items-center flex-column">
+                                @if (
+                                    $agreement->fieldCoordinator->user &&
+                                        $agreement->fieldCoordinator->user->img &&
+                                        file_exists(public_path($agreement->fieldCoordinator->user->img)))
+                                    <img class="img-fluid rounded-3 mb-4"
+                                        src="{{ asset($agreement->fieldCoordinator->user->img) }}" height="120"
+                                        width="120" alt="Korlap Avatar" />
                                 @else
-                                    <span
-                                        class="px-2 py-1 text-xs font-semibold text-amber-800 bg-amber-100 rounded-full">Pending</span>
+                                    <div class="avatar avatar-xl mb-4"><span
+                                            class="avatar-initial rounded-3 bg-label-warning">{{ strtoupper(substr($agreement->fieldCoordinator->user->name ?? 'K', 0, 2)) }}</span>
+                                    </div>
                                 @endif
+                                <div class="user-info text-center">
+                                    <h5 class="mb-2">{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}</h5>
+                                    {{-- ✅ PERUBAHAN 1: Menambahkan data Zona --}}
+                                    @php
+                                        $zone = $agreement->activeParkingLocations->first()->roadSection->zone ?? null;
+                                    @endphp
+                                    <span class="badge bg-label-warning rounded-pill">
+                                        Koordinator Lapangan @if ($zone)
+                                            {{ $zone }}
+                                        @endif
+                                    </span>
+                                </div>
                             </div>
-                        @empty
-                            <p class="text-sm text-center text-default-500 py-4">Belum ada transaksi.</p>
-                        @endforelse
-                    </div>
-                    {{-- ✅ PERUBAHAN 2: Menambahkan footer untuk total setoran --}}
-                    <div class="border-t border-default-200 mt-4 pt-4">
-                        <p class="text-sm text-default-600">Total Setoran Tervalidasi ({{ now()->year }})</p>
-                        <p class="text-lg font-bold text-default-900">Rp
-                            {{ number_format($totalDepositThisYear, 0, ',', '.') }}</p>
+                        </div>
+                        <div class="d-flex justify-content-around flex-wrap my-6 gap-0 gap-md-3 gap-lg-4">
+                            <div class="d-flex align-items-center me-5 gap-4">
+                                <div class="avatar">
+                                    <div class="avatar-initial bg-label-primary rounded-3"><i
+                                            class="icon-base ri ri-file-text-line ri-24px"></i></div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">{{ $agreement->activeParkingLocations->count() }}</h5><span>Titik
+                                        Lokasi</span>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="avatar">
+                                    <div class="avatar-initial bg-label-success rounded-3"><i
+                                            class="icon-base ri ri-wallet-3-line ri-24px"></i></div>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Rp {{ number_format($totalDepositThisYear, 0, ',', '.') }}</h5>
+                                    <span>Setoran Tahun Ini</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h5 class="pb-4 border-bottom mb-4">Details Perjanjian</h5>
+                        <div class="info-container">
+                            <ul class="list-unstyled mb-6">
+                                <li class="mb-2"><span class="fw-medium text-heading me-2">No.
+                                        PKS:</span><span>{{ $agreement->agreement_number }}</span></li>
+                                <li class="mb-2"><span class="fw-medium text-heading me-2">Status:</span><span
+                                        class="badge rounded-pill bg-label-{{ $agreement->status == 'active' ? 'success' : 'danger' }}">{{ ucfirst(str_replace('_', ' ', $agreement->status)) }}</span>
+                                </li>
+                                <li class="mb-2"><span
+                                        class="fw-medium text-heading me-2">Pimpinan:</span><span>{{ $agreement->leader->user->name ?? 'N/A' }}</span>
+                                </li>
+                                <li class="mb-2"><span class="fw-medium text-heading me-2">Masa
+                                        Berlaku:</span><span>{{ $agreement->start_date->translatedFormat('d M y') }} -
+                                        {{ $agreement->end_date->translatedFormat('d M y') }}</span></li>
+                            </ul>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{{ route('masterdata.agreements.edit', $agreement->id) }}"
+                                    class="btn btn-primary"><i class="icon-base ri ri-pencil-line me-2"></i>Edit</a>
+                                <a href="{{ route('masterdata.agreements.pdf', $agreement->id) }}" target="_blank"
+                                    class="btn btn-outline-danger"><i class="icon-base ri ri-printer-line me-2"></i>Cetak
+                                    PKS</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+            <div class="col-xl-8 col-lg-7 col-md-7 order-0 order-md-1">
+                <div class="card mb-6">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Daftar Lokasi Parkir Aktif</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive text-nowrap" style="max-height: 300px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <tbody>
+                                    @forelse ($agreement->activeParkingLocations as $location)
+                                        <tr>
+                                            <td><i
+                                                    class="icon-base ri ri-map-pin-2-line text-primary me-2"></i>{{ $location->name }}
+                                            </td>
+                                            <td><span class="text-muted">{{ $location->roadSection->name ?? 'N/A' }}</span>
+                                            </td>
+                                            <td><span
+                                                    class="badge bg-label-dark rounded-pill">{{ $location->roadSection->zone ?? 'N/A' }}</span>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td class="text-center text-muted">Tidak ada lokasi parkir aktif.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
 
-        {{-- Bagian Timeline Riwayat Perjanjian --}}
-        <div class="card bg-white shadow rounded-lg p-6 mt-6">
-            <h5 class="text-lg font-semibold text-default-800 mb-2 text-center">Riwayat Perjanjian</h5>
-            <div class="timeline-horizontal-container">
-                <div class="timeline-wrapper">
-                    <div class="timeline-line-h"></div>
-                    <div class="timeline-items">
-                        @forelse ($agreement->histories->sortByDesc('created_at') as $key => $history)
-                            @php
-                                $positionClass = $key % 2 != 0 ? 'item-top' : '';
-                                $icon = 'i-lucide-file-text';
-                                $color = 'bg-gray-400';
-                                switch ($history->event_type) {
-                                    case 'agreement_created':
-                                        $icon = 'i-lucide-file-plus-2';
-                                        $color = 'bg-primary-500';
-                                        break;
-                                    case 'location_added':
-                                        $icon = 'i-lucide-map-pin';
-                                        $color = 'bg-green-500';
-                                        break;
-                                    case 'location_removed':
-                                        $icon = 'i-lucide-map-pin-off';
-                                        $color = 'bg-amber-500';
-                                        break;
-                                    case 'deposit_changed':
-                                        $icon = 'i-lucide-receipt';
-                                        $color = 'bg-blue-500';
-                                        break;
-                                    case 'status_changed':
-                                        $icon = 'i-lucide-toggle-right';
-                                        $color = 'bg-teal-500';
-                                        break;
-                                }
-                            @endphp
-                            <div class="timeline-item-h {{ $positionClass }}">
-                                <div class="timeline-content-h">
-                                    <div class="flex justify-between items-center">
-                                        <p class="font-semibold text-sm">{{ $history->creator->name ?? 'Sistem' }}</p>
-                                        <p class="text-xs text-default-400">
-                                            {{ $history->created_at->translatedFormat('d M Y, H:i') }}</p>
-                                    </div>
-                                    <p class="text-sm mt-1">{{ $history->notes }}</p>
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Riwayat Setoran</h5>
+                    </div>
+                    <div class="table-responsive text-nowrap" style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-sm table-hover">
+                            <tbody>
+                                @forelse ($agreement->depositTransactions as $transaction)
+                                    <tr>
+                                        <td>{{ $transaction->deposit_date->translatedFormat('d F Y') }}</td>
+                                        <td class="fw-medium">Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                                        </td>
+                                        <td>
+                                            @if ($transaction->is_validated)
+                                                <span class="badge bg-label-success">Tervalidasi</span>
+                                            @else
+                                                <span class="badge bg-label-warning">Pending</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted">Belum ada riwayat setoran.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 order-2 mt-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0 text-center">Timeline Perjanjian</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline-horizontal-container">
+                            <div class="timeline-wrapper">
+                                <div class="timeline-line-h"></div>
+                                <div class="timeline-items">
+                                    @forelse ($agreement->histories as $key => $history)
+                                        @php
+                                            $positionClass = $key % 2 != 0 ? 'item-top' : '';
+                                            $icon = 'ri-file-text-line';
+                                            $color = 'bg-secondary';
+                                            switch ($history->event_type) {
+                                                case 'agreement_created':
+                                                    $icon = 'ri-file-add-line';
+                                                    $color = 'bg-primary';
+                                                    break;
+                                                case 'location_added':
+                                                    $icon = 'ri-map-pin-add-line';
+                                                    $color = 'bg-success';
+                                                    break;
+                                                case 'location_removed':
+                                                    $icon = 'ri-map-pin-user-line';
+                                                    $color = 'bg-warning';
+                                                    break;
+                                                case 'deposit_changed':
+                                                    $icon = 'ri-money-dollar-circle-line';
+                                                    $color = 'bg-info';
+                                                    break;
+                                                case 'status_changed':
+                                                case 'agreement_renewed':
+                                                    $icon = 'ri-refresh-line';
+                                                    $color = 'bg-success';
+                                                    break;
+                                                case 'agreement_terminated':
+                                                    $icon = 'ri-shield-x-line';
+                                                    $color = 'bg-danger';
+                                                    break;
+                                            }
+                                        @endphp
+                                        <div class="timeline-item-h {{ $positionClass }}">
+                                            <div class="timeline-content-h">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <p class="fw-medium text-sm text-heading mb-0">
+                                                        {{ $history->creator->name ?? 'Sistem' }}</p>
+                                                    <p class="text-muted small mb-0">
+                                                        {{ $history->created_at->translatedFormat('d M, H:i') }}</p>
+                                                </div>
+                                                <p class="text-body-secondary small mt-1">{{ $history->notes }}</p>
+                                            </div>
+                                            <div class="timeline-pin-h {{ $color }}"><i
+                                                    class="icon-base {{ $icon }} text-white"></i></div>
+                                        </div>
+                                    @empty
+                                        <div class="text-center w-100 py-4 absolute">
+                                            <p class="text-muted">Belum ada riwayat tercatat.</p>
+                                        </div>
+                                    @endforelse
                                 </div>
-                                <div class="timeline-pin-h {{ $color }}"><i
-                                        class="{{ $icon }} text-white size-3"></i></div>
                             </div>
-                        @empty
-                            <div class="text-center w-full py-8 absolute">
-                                <p>Belum ada riwayat tercatat.</p>
-                            </div>
-                        @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('scripts')
     <script>
-        // Logika Drag to Scroll untuk timeline
+        // Logika Drag to Scroll
         const wrapper = document.querySelector('.timeline-horizontal-container');
         if (wrapper) {
-            let isDown = false;
-            let startX;
-            let scrollLeft;
-
+            let isDown = false,
+                startX, scrollLeft;
             wrapper.addEventListener('mousedown', (e) => {
                 isDown = true;
                 wrapper.style.cursor = 'grabbing';

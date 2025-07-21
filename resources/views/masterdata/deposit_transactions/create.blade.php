@@ -2,55 +2,50 @@
 
 @section('title', 'Catat Setoran Baru')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Catat Setoran Baru</h4>
-            <a href="{{ route('masterdata.deposit-transactions.index') }}"
-                class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar Transaksi Setoran
-            </a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Catat Setoran Baru</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('masterdata.deposit-transactions.index') }}">Transaksi
+                            Setoran</a></li>
+                    <li class="breadcrumb-item active">Tambah</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- Error Messages dari Laravel Validation --}}
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">Ada beberapa masalah dengan input Anda.</span>
-                <ul class="mt-3 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
-            <form action="{{ route('masterdata.deposit-transactions.store') }}" method="POST">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Detail Setoran</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('masterdata.deposit-transactions.store') }}" method="POST"
+                enctype="multipart/form-data">
                 @csrf
-
-                <h5 class="text-lg font-semibold text-default-800 mb-4">Detail Setoran</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label for="agreement_id" class="block text-sm font-medium text-default-700 mb-2">Pilih Perjanjian
-                            Aktif</label>
-                        <select name="agreement_id" id="agreement_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('agreement_id') border-red-500 @enderror select2-agreements"
-                            {{-- Tambahkan class select2-agreements --}} required>
-                            <option value="">Cari atau pilih perjanjian...</option> {{-- Placeholder untuk Select2 --}}
-                            {{-- Opsi akan dimuat secara dinamis oleh Select2 via AJAX --}}
-                            @if (old('agreement_id')) {{-- Jika ada old input, tampilkan opsi yang dipilih sebelumnya --}}
-                                @php
-                                    $oldAgreement = App\Models\Agreement::find(old('agreement_id'));
-                                @endphp
+                <div class="row g-6">
+                    <div class="col-12">
+                        <label for="agreement_id" class="form-label">Pilih Perjanjian Aktif</label>
+                        <select name="agreement_id" id="agreement_id" class="form-select select2-agreements" required>
+                            @if (old('agreement_id'))
+                                @php $oldAgreement = \App\Models\Agreement::find(old('agreement_id')); @endphp
                                 @if ($oldAgreement)
                                     <option value="{{ $oldAgreement->id }}" selected>
                                         {{ $oldAgreement->agreement_number }} (Korlap:
@@ -59,103 +54,140 @@
                                 @endif
                             @endif
                         </select>
-                        @error('agreement_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
                     </div>
-                    <div>
-                        <label for="deposit_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal
-                            Setoran</label>
-                        <input type="date" name="deposit_date" id="deposit_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('deposit_date') border-red-500 @enderror"
-                            value="{{ old('deposit_date', date('Y-m-d')) }}" required> {{-- Default ke tanggal hari ini --}}
-                        @error('deposit_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="date" name="deposit_date" id="deposit_date" class="form-control"
+                                value="{{ old('deposit_date', date('Y-m-d')) }}" required />
+                            <label for="deposit_date">Tanggal Setoran</label>
+                        </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="amount" class="block text-sm font-medium text-default-700 mb-2">Jumlah Setoran
-                            (Rp)</label>
-                        <input type="number" name="amount" id="amount"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('amount') border-red-500 @enderror"
-                            value="{{ old('amount') }}" placeholder="Contoh: 50000" min="0" required>
-                        @error('amount')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="number" name="amount" id="amount" class="form-control"
+                                placeholder="Contoh: 50000" value="{{ old('amount') }}" min="0" required />
+                            <label for="amount">Jumlah Setoran (Rp)</label>
+                        </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="notes" class="block text-sm font-medium text-default-700 mb-2">Catatan
-                            (Opsional)</label>
-                        <textarea name="notes" id="notes" rows="3"
-                            class="form-textarea w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('notes') border-red-500 @enderror"
-                            placeholder="Masukkan catatan tambahan...">{{ old('notes') }}</textarea>
-                        @error('notes')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <textarea name="notes" id="notes" class="form-control" placeholder="Masukkan catatan tambahan jika ada..."
+                                style="height: 80px;">{{ old('notes') }}</textarea>
+                            <label for="notes">Catatan (Opsional)</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Bukti Transfer (Opsional)</label>
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <img src="{{ asset('assets/img/illustrations/image-light.png') }}" alt="proof-placeholder"
+                                    class="d-block rounded-3 mx-auto mb-4" id="proof-preview" style="max-height: 150px;" />
+                                <label for="proof-upload" class="btn btn-primary">
+                                    <i class="icon-base ri-upload-2-line me-2"></i>Pilih Gambar
+                                    <input type="file" id="proof-upload" name="proof_of_transfer"
+                                        class="account-file-input" hidden accept="image/png, image/jpeg" />
+                                </label>
+                                <div id="proof-error" class="mt-2 text-danger text-sm"></div>
+                                <p class="text-muted mt-2 mb-0">Hanya JPG/PNG. Akan dikompres di bawah 300KB.</p>
+                            </div>
+                        </div>
+                        @error('proof_of_transfer')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                        Simpan Setoran
-                    </button>
+                <div class="pt-6 text-end">
                     <a href="{{ route('masterdata.deposit-transactions.index') }}"
-                        class="px-6 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">
-                        Batal
-                    </a>
+                        class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan Setoran</button>
                 </div>
             </form>
         </div>
     </div>
 @endsection
 
+@push('vendors-js')
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
+@endpush
+
 @push('scripts')
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- Client-side validation for amount to only allow numbers and decimals ---
-            const amountInput = document.getElementById('amount');
-            if (amountInput) {
-                amountInput.addEventListener('input', function(e) {
-                    let value = e.target.value;
-                    value = value.replace(/[^0-9.]/g, ''); // Remove non-numeric except dot
-                    const parts = value.split('.');
-                    if (parts.length > 2) {
-                        value = parts[0] + '.' + parts.slice(1).join(''); // Allow only one dot
-                    }
-                    e.target.value = value;
+        document.addEventListener("DOMContentLoaded", function() {
+            // --- Inisialisasi Select2 dengan AJAX ---
+            const agreementSelect = $('#agreement_id');
+            if (agreementSelect.length) {
+                agreementSelect.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: 'Cari atau pilih perjanjian...',
+                    dropdownParent: agreementSelect.parent(),
+                    allowClear: true,
+                    ajax: {
+                        url: '{{ route('masterdata.search-active-agreements') }}',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                term: params.term
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.results
+                            };
+                        },
+                        cache: true
+                    },
+                    minimumInputLength: 2
                 });
             }
 
-            // --- Initialize Select2 with AJAX for Agreements ---
-            $('.select2-agreements').select2({
-                placeholder: 'Cari atau pilih perjanjian...',
-                allowClear: true, // Allows clearing the selection
-                width: 'resolve', // Ensures Select2 takes up 100% width
-                ajax: {
-                    url: '{{ route('masterdata.search-active-agreements') }}', // Endpoint AJAX
-                    dataType: 'json',
-                    delay: 250, // Delay dalam ms sebelum request dikirim
-                    data: function(params) {
-                        return {
-                            term: params.term, // Search term
-                            page: params.page // Current page (for pagination in Select2)
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
-                        return {
-                            results: data.results,
-                            pagination: {
-                                more: (params.page * 10) < data
-                                    .total // Asumsi backend mengembalikan 'total' jika ada pagination
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 3 // Minimum karakter untuk memulai pencarian
-            });
+            // --- Logika Upload & Kompresi Gambar ---
+            const fileInput = document.getElementById('proof-upload');
+            const imagePreview = document.getElementById('proof-preview');
+            const errorDiv = document.getElementById('proof-error');
+            const defaultSrc = "{{ asset('assets/img/illustrations/image-light.png') }}";
+
+            if (fileInput) {
+                fileInput.addEventListener('change', async (e) => {
+                    const imageFile = e.target.files[0];
+                    if (!imageFile) {
+                        imagePreview.src = defaultSrc;
+                        return;
+                    }
+
+                    errorDiv.textContent = '';
+                    if (!['image/jpeg', 'image/png'].includes(imageFile.type)) {
+                        errorDiv.textContent = 'Hanya file JPG atau PNG.';
+                        fileInput.value = '';
+                        imagePreview.src = defaultSrc;
+                        return;
+                    }
+
+                    const options = {
+                        maxSizeMB: 0.3,
+                        maxWidthOrHeight: 1024,
+                        useWebWorker: true
+                    };
+                    try {
+                        const compressedFile = await imageCompression(imageFile, options);
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(new File([compressedFile], imageFile.name, {
+                            type: compressedFile.type
+                        }));
+                        fileInput.files = dataTransfer.files;
+                        imagePreview.src = URL.createObjectURL(compressedFile);
+                    } catch (error) {
+                        errorDiv.textContent = "Gagal memproses gambar.";
+                        fileInput.value = '';
+                        imagePreview.src = defaultSrc;
+                    }
+                });
+            }
         });
     </script>
 @endpush

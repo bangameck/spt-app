@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DepositTransactionController extends Controller
 {
@@ -116,9 +118,7 @@ class DepositTransactionController extends Controller
             'agreement_id' => [
                 'required',
                 'exists:agreements,id',
-                Rule::exists('agreements', 'id')->where(function ($query) {
-                    $query->where('status', 'active');
-                }),
+                Rule::exists('agreements', 'id')->where('status', 'active'),
                 Rule::unique('deposit_transactions')->where(function ($query) use ($request) {
                     return $query->where('deposit_date', $request->deposit_date);
                 }),
@@ -126,19 +126,24 @@ class DepositTransactionController extends Controller
             'deposit_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:255',
+            // Tambahkan validasi untuk bukti transfer
+            'proof_of_transfer' => 'nullable|image|mimes:jpeg,png,jpg|max:300', // Maks 300KB
         ]);
 
         Log::info('DepositTransactionController@store: Validation successful.', $validatedData);
 
-        DepositTransaction::create([
-            'agreement_id' => $validatedData['agreement_id'],
-            'deposit_date' => $validatedData['deposit_date'],
-            'amount' => $validatedData['amount'],
-            'is_validated' => false,
-            'validation_date' => null,
-            'notes' => $validatedData['notes'],
-            'created_by_user_id' => Auth::id(),
-        ]);
+        $transactionData = Arr::except($validatedData, ['proof_of_transfer']);
+        $transactionData['created_by_user_id'] = Auth::id();
+        $transactionData['is_validated'] = false;
+
+        // ✅ Logika untuk handle file upload
+        if ($request->hasFile('proof_of_transfer')) {
+            $imageName = time() . '_proof.' . $request->proof_of_transfer->extension();
+            $request->proof_of_transfer->move(public_path('uploads/proofs'), $imageName);
+            $transactionData['proof_of_transfer'] = 'uploads/proofs/' . $imageName;
+        }
+
+        DepositTransaction::create($transactionData);
 
         return redirect()->route('masterdata.deposit-transactions.index')
             ->with('success', 'Setoran berhasil dicatat!');
@@ -149,7 +154,13 @@ class DepositTransactionController extends Controller
      */
     public function show(DepositTransaction $depositTransaction)
     {
-        $depositTransaction->load(['agreement.fieldCoordinator.user', 'agreement.leader.user', 'creator']);
+        // Eager load semua relasi yang dibutuhkan untuk halaman detail
+        $depositTransaction->load([
+            'agreement.fieldCoordinator.user',
+            'agreement.leader.user',
+            'creator'
+        ]);
+
         return view('masterdata.deposit_transactions.show', compact('depositTransaction'));
     }
 
@@ -158,49 +169,44 @@ class DepositTransactionController extends Controller
      */
     public function edit(DepositTransaction $depositTransaction)
     {
-        // Untuk Select2, kita tidak perlu mengirim semua perjanjian di awal
-        // Mereka akan dimuat via AJAX
-        $activeAgreements = collect(); // Kirim koleksi kosong atau null
-
-        return view('masterdata.deposit_transactions.edit', compact('depositTransaction', 'activeAgreements'));
+        // Kode edit() Anda sudah benar, tidak perlu diubah.
+        return view('masterdata.deposit_transactions.edit', compact('depositTransaction'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Mengupdate transaksi di database.
      */
     public function update(Request $request, DepositTransaction $depositTransaction)
     {
-        Log::info('DepositTransactionController@update: Request received.', $request->all());
-
+        // 1. Validasi, termasuk untuk file gambar baru
         $validatedData = $request->validate([
-            'agreement_id' => [
-                'required',
-                'exists:agreements,id', // Pastikan ID perjanjian ada
-                // Perbaikan di sini: Izinkan ID perjanjian saat ini, atau perjanjian baru yang aktif
-                Rule::exists('agreements', 'id')->where(function ($query) use ($depositTransaction) {
-                    $query->where('status', 'active') // Harus aktif
-                        ->orWhere('id', $depositTransaction->agreement_id); // ATAU ID perjanjian yang sedang terikat
-                }),
-                Rule::unique('deposit_transactions')->where(function ($query) use ($request) {
-                    return $query->where('deposit_date', $request->deposit_date);
-                })->ignore($depositTransaction->id),
-            ],
-            'deposit_date' => 'required|date',
+            'agreement_id' => ['required', 'exists:agreements,id'],
+            'deposit_date' => ['required', 'date', Rule::unique('deposit_transactions')->where('agreement_id', $request->agreement_id)->ignore($depositTransaction->id)],
             'amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:255',
+            'proof_of_transfer' => 'nullable|image|mimes:jpeg,png,jpg|max:1024', // Maks 1MB
         ]);
 
-        Log::info('DepositTransactionController@update: Validation successful.', $validatedData);
+        // 2. Pisahkan data untuk diupdate
+        $transactionData = Arr::except($validatedData, ['proof_of_transfer']);
 
-        $depositTransaction->update([
-            'agreement_id' => $validatedData['agreement_id'],
-            'deposit_date' => $validatedData['deposit_date'],
-            'amount' => $validatedData['amount'],
-            'notes' => $validatedData['notes'],
-        ]);
+        // 3. ✅ Logika untuk handle file upload baru
+        if ($request->hasFile('proof_of_transfer')) {
+            // Hapus bukti transfer lama jika ada
+            if ($depositTransaction->proof_of_transfer && file_exists(public_path($depositTransaction->proof_of_transfer))) {
+                unlink(public_path($depositTransaction->proof_of_transfer));
+            }
+
+            // Simpan bukti transfer yang baru
+            $imageName = time() . '_proof.' . $request->proof_of_transfer->extension();
+            $request->proof_of_transfer->move(public_path('uploads/proofs'), $imageName);
+            $transactionData['proof_of_transfer'] = 'uploads/proofs/' . $imageName;
+        }
+
+        $depositTransaction->update($transactionData);
 
         return redirect()->route('masterdata.deposit-transactions.index')
-            ->with('success', 'Setoran berhasil diperbarui!');
+            ->with('success', 'Setoran berhasil diperbarui.');
     }
 
     /**
@@ -278,5 +284,17 @@ class DepositTransactionController extends Controller
 
         Log::info('DepositTransactionController@searchActiveAgreements: Returning ' . count($results) . ' results.');
         return response()->json(['results' => $results]);
+    }
+
+    public function generatePdf(DepositTransaction $depositTransaction)
+    {
+        // Eager load semua relasi yang dibutuhkan
+        $depositTransaction->load(['agreement.fieldCoordinator.user', 'creator']);
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.deposit_receipt', compact('depositTransaction'));
+
+        // Tampilkan PDF di browser
+        return $pdf->stream('bukti_setor_' . $depositTransaction->id . '.pdf');
     }
 }

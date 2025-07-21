@@ -1,207 +1,190 @@
 @extends('layouts.app')
 
-@section('title', 'Daftar Perjanjian Kerjasama')
+@section('title', 'Manajemen Perjanjian Kerjasama')
+
+@push('styles')
+    {{-- CSS untuk SweetAlert2 --}}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
+@endpush
 
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Daftar Perjanjian Kerjasama</h4>
-            <a href="{{ route('masterdata.agreements.create') }}"
-                class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                Tambah Perjanjian Baru
-            </a>
+    {{-- Page Title & Breadcrumb --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Manajemen Perjanjian Kerjasama</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item active">PKS</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- SweetAlert2 Success Message (akan ditampilkan oleh JS) --}}
-        @if (session('success') && session('agreement_number'))
-            <div id="success-alert" data-name="{{ session('agreement_number') }}" style="display: none;"></div>
-        @endif
-
-        @if (session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
+    {{-- Daftar Perjanjian --}}
+    <div class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between gap-4">
+            <div class="card-title mb-0">
+                <h5 class="mb-1">Daftar Semua Perjanjian</h5>
+                <p class="text-muted mb-0">Total {{ $agreements->total() }} perjanjian terdaftar.</p>
             </div>
-        @endif
-
-        <div class="card bg-white shadow rounded-lg p-6">
-            {{-- Search Form --}}
-            <form action="{{ route('masterdata.agreements.index') }}" method="GET" class="mb-4">
-                <div class="flex items-center gap-2">
-                    <input type="text" name="search" placeholder="Cari perjanjian..."
-                        class="form-input flex-grow px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                        value="{{ $search ?? '' }}">
-                    <button type="submit"
-                        class="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-all">
-                        Cari
-                    </button>
-                    @if ($search)
-                        <a href="{{ route('masterdata.agreements.index') }}"
-                            class="px-4 py-2 rounded-md bg-default-200 text-default-800 hover:bg-default-300 transition-all">
-                            Reset
-                        </a>
-                    @endif
-                </div>
-            </form>
-
-            <div id="agreements-table-container" class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left text-default-500">
-                    <thead class="text-xs text-default-700 uppercase bg-default-50">
+            <div class="d-flex justify-content-md-end align-items-center gap-4">
+                {{-- Form Pencarian --}}
+                <form action="{{ route('masterdata.agreements.index') }}" method="GET" class="d-flex align-items-center">
+                    <div class="input-group">
+                        <input type="search" name="search" class="form-control" placeholder="Cari No PKS/Korlap..."
+                            value="{{ request('search') }}">
+                        <button class="btn btn-primary" type="submit"><i class="icon-base ri ri-search-line"></i></button>
+                    </div>
+                </form>
+                {{-- Tombol Tambah --}}
+                <a href="{{ route('masterdata.agreements.create') }}" class="btn btn-primary">
+                    <i class="icon-base ri ri-add-line me-2"></i>Tambah PKS
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-3">Nomor Perjanjian</th>
-                            <th scope="col" class="px-6 py-3">Pimpinan</th>
-                            <th scope="col" class="px-6 py-3">Koordinator Lapangan</th>
-                            <th scope="col" class="px-6 py-3">Lokasi Parkir</th>
-                            <th scope="col" class="px-6 py-3">Mulai - Akhir</th>
-                            <th scope="col" class="px-6 py-3">Setoran Harian</th>
-                            <th scope="col" class="px-6 py-3">Status</th>
-                            <th scope="col" class="px-6 py-3">Aksi</th>
+                            <th>Nomor PKS</th>
+                            <th>Koordinator Lapangan</th>
+                            <th>Masa Berlaku</th>
+                            <th>Status</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="table-border-bottom-0">
                         @forelse ($agreements as $agreement)
-                            <tr class="bg-white border-b hover:bg-default-50">
-                                <td class="px-6 py-4 font-medium text-default-900 whitespace-nowrap">
-                                    {{ $agreement->agreement_number }}
+                            <tr>
+                                <td>
+                                    <span class="fw-medium">{{ $agreement->agreement_number }}</span>
+                                    <small class="d-block text-muted">Pimpinan:
+                                        {{ $agreement->leader->user->name ?? 'N/A' }}</small>
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ $agreement->leader->user->name ?? 'N/A' }}
+                                <td>
+                                    <div class="d-flex justify-content-start align-items-center">
+                                        <div class="avatar-wrapper me-3">
+                                            <div class="avatar avatar-sm">
+                                                @if ($agreement->fieldCoordinator->user->img && file_exists(public_path($agreement->fieldCoordinator->user->img)))
+                                                    <img src="{{ asset($agreement->fieldCoordinator->user->img) }}"
+                                                        alt="Avatar" class="rounded-circle">
+                                                @else
+                                                    <span
+                                                        class="avatar-initial rounded-circle bg-label-warning">{{ strtoupper(substr($agreement->fieldCoordinator->user->name ?? 'K', 0, 2)) }}</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <span>{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}</span>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}
+                                <td>
+                                    <div>
+                                        <span
+                                            class="d-block">{{ $agreement->start_date->translatedFormat('d M Y') }}</span>
+                                        <small class="text-muted">s/d
+                                            {{ $agreement->end_date->translatedFormat('d M Y') }}</small>
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4">
-                                    @forelse ($agreement->activeParkingLocations as $pl)
-                                        <span class="block">{{ $pl->name }}
-                                            ({{ $pl->roadSection->name ?? 'N/A' }})
-                                        </span>
-                                    @empty
-                                        <span class="text-default-500">Tidak ada lokasi</span>
-                                    @endforelse
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $agreement->start_date->format('d M Y') }} -
-                                    {{ $agreement->end_date->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    Rp {{ number_format($agreement->daily_deposit_amount, 0, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4">
+                                <td>
+                                    @php
+                                        $statusClass = 'bg-label-secondary'; // Default
+                                        if ($agreement->status == 'active') {
+                                            $statusClass = 'bg-label-success';
+                                        }
+                                        if ($agreement->status == 'expired') {
+                                            $statusClass = 'bg-label-danger';
+                                        }
+                                        if ($agreement->status == 'terminated') {
+                                            $statusClass = 'bg-label-dark';
+                                        }
+                                        if ($agreement->status == 'pending_renewal') {
+                                            $statusClass = 'bg-label-warning';
+                                        }
+                                    @endphp
                                     <span
-                                        class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium {{ $agreement->status == 'active'
-                                            ? 'bg-green-100 text-green-800'
-                                            : ($agreement->status == 'expired'
-                                                ? 'bg-red-100 text-red-800'
-                                                : ($agreement->status == 'terminated'
-                                                    ? 'bg-gray-100 text-gray-800'
-                                                    : 'bg-yellow-100 text-yellow-800')) }}">
-                                        {{ ucfirst(str_replace('_', ' ', $agreement->status)) }}
-                                    </span>
+                                        class="badge rounded-pill {{ $statusClass }}">{{ ucfirst(str_replace('_', ' ', $agreement->status)) }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center space-x-3">
-                                        <a href="{{ route('masterdata.agreements.pdf', $agreement) }}" target="_blank"
-                                            class="font-medium text-purple-600 hover:underline">Cetak PDF</a>
-                                        <a href="{{ route('masterdata.agreements.show', $agreement) }}"
-                                            class="font-medium text-blue-600 hover:underline">Lihat</a>
-                                        <a href="{{ route('masterdata.agreements.edit', $agreement) }}"
-                                            class="font-medium text-blue-600 hover:underline">Edit</a>
-                                        <form id="delete-form-agreement-{{ $agreement->id }}"
-                                            action="{{ route('masterdata.agreements.destroy', $agreement->id) }}"
-                                            method="POST" style="display: none;">
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('masterdata.agreements.show', $agreement->id) }}"
+                                            data-bs-toggle="tooltip" title="Lihat Detail">
+                                            <i class="icon-base ri ri-eye-line"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('masterdata.agreements.edit', $agreement->id) }}"
+                                            data-bs-toggle="tooltip" title="Edit">
+                                            <i class="icon-base ri ri-pencil-line"></i>
+                                        </a>
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('masterdata.agreements.pdf', $agreement->id) }}" target="_blank"
+                                            data-bs-toggle="tooltip" title="Cetak PKS">
+                                            <i class="icon-base ri ri-printer-line"></i>
+                                        </a>
+                                        <form action="{{ route('masterdata.agreements.destroy', $agreement->id) }}"
+                                            method="POST" class="form-delete">
                                             @csrf
                                             @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
+                                                title="Hapus">
+                                                <i class="icon-base ri ri-delete-bin-line"></i>
+                                            </button>
                                         </form>
-                                        <button type="button"
-                                            class="font-medium text-red-600 hover:underline ml-2 delete-agreement-btn"
-                                            data-agreement-id="{{ $agreement->id }}"
-                                            data-agreement-number="{{ $agreement->agreement_number }}">
-                                            Hapus
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="8" class="px-6 py-4 text-center text-default-500">Tidak ada perjanjian
-                                    ditemukan.</td>
+                            <tr>
+                                <td colspan="5" class="text-center">Tidak ada data perjanjian ditemukan.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            {{-- Pagination Links --}}
             <div class="mt-4">
-                {{ $agreements->appends(['search' => request('search')])->links('vendor.pagination.tailwind') }}
+                {{ $agreements->appends(['search' => request('search')])->links() }}
             </div>
         </div>
     </div>
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- SweetAlert2 for Delete Confirmation (Agreement) ---
-            document.getElementById('agreements-table-container').addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('delete-agreement-btn')) {
-                    e.preventDefault();
+        document.addEventListener("DOMContentLoaded", function() {
+            // Notifikasi Sukses
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: false,
+                    timer: 2500
+                });
+            @endif
 
-                    const agreementId = e.target.dataset.agreementId;
-                    const agreementNumber = e.target.dataset.agreementNumber;
-
-                    if (typeof Swal === 'undefined') {
-                        console.error('SweetAlert2 (Swal) is not loaded.');
-                        alert(
-                            `Gagal menghapus perjanjian ${agreementNumber}. SweetAlert2 tidak ditemukan.`
-                        );
-                        return;
-                    }
-
+            // Konfirmasi Hapus
+            document.querySelectorAll('.form-delete').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
                     Swal.fire({
-                        title: 'Apakah Anda yakin?',
-                        text: `Anda akan menghapus perjanjian "${agreementNumber}". Data yang dihapus tidak dapat dikembalikan! Ini juga akan membebaskan lokasi parkir terkait.`,
+                        title: 'Anda Yakin?',
+                        text: "Data perjanjian yang dihapus akan membebaskan lokasi parkir terkait.",
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
+                        cancelButtonColor: '#6f6b7d',
                         confirmButtonText: 'Ya, Hapus!',
                         cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            document.getElementById('delete-form-agreement-' + agreementId)
-                                .submit();
+                            form.submit();
                         }
                     });
-                }
-            });
-
-            // --- SweetAlert2 Success Message ---
-            const successAlert = document.getElementById('success-alert');
-            if (successAlert) {
-                const agreementNumber = successAlert.dataset.name;
-                if (typeof Swal === 'undefined') {
-                    console.error('SweetAlert2 (Swal) is not loaded for success message.');
-                    alert(`Perjanjian "${agreementNumber}" berhasil ditambahkan.`);
-                    return;
-                }
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: `Perjanjian "${agreementNumber}" berhasil ditambahkan.`,
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    timer: 3000,
-                    timerProgressBar: true
                 });
-            }
+            });
         });
     </script>
 @endpush

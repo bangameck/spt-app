@@ -18,6 +18,7 @@ class DepositTransaction extends Model
         'validation_date', // <-- UBAH INI
         'notes',
         'created_by_user_id',
+        'proof_of_transfer',
     ];
 
     protected $casts = [

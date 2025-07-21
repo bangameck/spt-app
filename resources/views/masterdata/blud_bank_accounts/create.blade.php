@@ -3,57 +3,78 @@
 @section('title', 'Tambah Rekening BLUD Baru')
 
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Tambah Rekening BLUD Baru</h4>
-            <a href="{{ route('admin.blud-bank-accounts.index') }}"
-                class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar
-            </a>
+    {{-- Page Title & Breadcrumb --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Tambah Rekening BLUD Baru</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('admin.blud-bank-accounts.index') }}">Rekening BLUD</a></li>
+                    <li class="breadcrumb-item active">Tambah</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <ul class="mt-2 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    {{-- Menampilkan Pesan Error Validasi --}}
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
+    <div class="card">
+        <div class="card-body">
             <form action="{{ route('admin.blud-bank-accounts.store') }}" method="POST">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="bank_name" class="block text-sm font-medium text-default-700 mb-2">Nama Bank</label>
-                        <input type="text" name="bank_name" id="bank_name" class="form-input w-full"
-                            value="{{ old('bank_name') }}" placeholder="Contoh: Bank BRI" required>
+                <div class="row g-6">
+                    {{-- Nama Bank --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="bank_name" name="bank_name"
+                                placeholder="Contoh: Bank BRI" value="{{ old('bank_name') }}" required />
+                            <label for="bank_name">Nama Bank</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="account_number" class="block text-sm font-medium text-default-700 mb-2">Nomor
-                            Rekening</label>
-                        <input type="text" name="account_number" id="account_number" class="form-input w-full"
-                            value="{{ old('account_number') }}" placeholder="Masukkan nomor rekening" required>
+
+                    {{-- Nomor Rekening --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="account_number" name="account_number"
+                                placeholder="Masukkan nomor rekening" value="{{ old('account_number') }}" required />
+                            <label for="account_number">Nomor Rekening</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="account_name" class="block text-sm font-medium text-default-700 mb-2">Atas Nama</label>
-                        <input type="text" name="account_name" id="account_name" class="form-input w-full"
-                            value="{{ old('account_name') }}" placeholder="Masukkan nama pemilik rekening" required>
+
+                    {{-- Atas Nama --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="account_name" name="account_name"
+                                placeholder="Masukkan nama pemilik rekening" value="{{ old('account_name') }}" required />
+                            <label for="account_name">Atas Nama</label>
+                        </div>
                     </div>
-                    <div>
-                        <label for="start_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Mulai
-                            Efektif</label>
-                        <input type="date" name="start_date" id="start_date" class="form-input w-full"
-                            value="{{ old('start_date', date('Y-m-d')) }}" required>
+
+                    {{-- Tanggal Mulai Efektif --}}
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="date" class="form-control" id="start_date" name="start_date"
+                                value="{{ old('start_date', date('Y-m-d')) }}" required />
+                            <label for="start_date">Tanggal Mulai Efektif</label>
+                        </div>
                     </div>
                 </div>
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700">Simpan Rekening</button>
-                    <a href="{{ route('admin.blud-bank-accounts.index') }}" class="px-6 py-2 rounded-md border">Batal</a>
+
+                {{-- Tombol Aksi --}}
+                <div class="pt-6 text-end">
+                    <a href="{{ route('admin.blud-bank-accounts.index') }}" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan Rekening</button>
                 </div>
             </form>
         </div>

@@ -65,46 +65,10 @@
             </a>
         </li>
 
-        <li class="menu-header small"><span class="menu-header-text">Master Data & Kontrak</span></li>
-
-        @if (Auth::user()->isAdmin() || Auth::user()->isStaff())
-            <li class="menu-item {{ request()->routeIs('masterdata.agreements.*') ? 'active' : '' }}">
-                <a href="{{ route('masterdata.agreements.index') }}" class="menu-link">
-                    <i class="icon-base ri  menu-icon tf-icons ri-file-text-line"></i>
-                    <div data-i18n="Perjanjian Kerjasama">Perjanjian Kerjasama</div>
-                </a>
-            </li>
-            <li class="menu-item {{ request()->routeIs('masterdata.agreement-histories.*') ? 'active' : '' }}">
-                <a href="{{ route('masterdata.agreement-histories.index') }}" class="menu-link">
-                    <i class="icon-base ri menu-icon tf-icons ri-history-line"></i>
-                    <div data-i18n="Histori Perjanjian">Histori Perjanjian</div>
-                </a>
-            </li>
-            <li
-                class="menu-item {{ request()->routeIs('masterdata.road-sections.*') || request()->routeIs('masterdata.parking-locations.*') ? 'open' : '' }}">
-                <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="icon-base ri menu-icon tf-icons ri-map-pin-line"></i>
-                    <div data-i18n="Manage Lokasi">Manage Lokasi</div>
-                </a>
-                <ul class="menu-sub">
-                    <li class="menu-item {{ request()->routeIs('masterdata.road-sections.*') ? 'active' : '' }}">
-                        <a href="{{ route('masterdata.road-sections.index') }}" class="menu-link">
-                            <div data-i18n="Ruas Jalan">Ruas Jalan</div>
-                        </a>
-                    </li>
-                    <li class="menu-item {{ request()->routeIs('masterdata.parking-locations.*') ? 'active' : '' }}">
-                        <a href="{{ route('masterdata.parking-locations.index') }}" class="menu-link">
-                            <div data-i18n="Lokasi Parkir">Lokasi Parkir</div>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        @endif
-
         @if (Auth::user()->isAdmin())
             <li class="menu-header small"><span class="menu-header-text">Administrasi</span></li>
             <li
-                class="menu-item {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.leaders.*') || request()->routeIs('admin.field-coordinators.*') ? 'open' : '' }}">
+                class="menu-item {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.leaders.*') || request()->routeIs('admin.field-coordinators.*') ? 'active open' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="icon-base ri menu-icon tf-icons ri-user-settings-line"></i>
                     <div data-i18n="Manage Users">Manage Users</div>
@@ -130,7 +94,69 @@
                     <div data-i18n="Rekening BLUD">Rekening BLUD</div>
                 </a>
             </li>
+            <li class="menu-item {{ request()->routeIs('masterdata.deposit-transactions.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.deposit-transactions.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-money-dollar-circle-line"></i>
+                    <div data-i18n="Histori Perjanjian">Deposit</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('masterdata.deposit-reports.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.deposit-reports.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-exchange-dollar-fill"></i>
+                    <div data-i18n="Histori Perjanjian">Histori Deposit</div>
+                </a>
+            </li>
         @endif
+
+        <li class="menu-header small"><span class="menu-header-text">Master Data & Kontrak</span></li>
+
+        @if (Auth::user()->isAdmin() || Auth::user()->isStaff())
+            <li
+                class="menu-item {{ request()->routeIs('masterdata.road-sections.*') || request()->routeIs('masterdata.parking-locations.*') ? 'active open' : '' }}">
+                <a href="javascript:void(0);" class="menu-link menu-toggle">
+                    <i class="icon-base ri menu-icon tf-icons ri-map-pin-line"></i>
+                    <div data-i18n="Manage Lokasi">Manage Lokasi</div>
+                </a>
+                <ul class="menu-sub">
+                    <li class="menu-item {{ request()->routeIs('masterdata.road-sections.*') ? 'active' : '' }}">
+                        <a href="{{ route('masterdata.road-sections.index') }}" class="menu-link">
+                            <div data-i18n="Ruas Jalan">Ruas Jalan</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('masterdata.parking-locations.*') ? 'active' : '' }}">
+                        <a href="{{ route('masterdata.parking-locations.index') }}" class="menu-link">
+                            <div data-i18n="Lokasi Parkir">Lokasi Parkir</div>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+            <li class="menu-item {{ request()->routeIs('masterdata.agreements.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.agreements.index') }}" class="menu-link">
+                    <i class="icon-base ri  menu-icon tf-icons ri-file-text-line"></i>
+                    <div data-i18n="Perjanjian Kerjasama">Perjanjian Kerjasama</div>
+                </a>
+            </li>
+
+            <li class="menu-item {{ request()->routeIs('masterdata.agreement-histories.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.agreement-histories.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-history-line"></i>
+                    <div data-i18n="Histori Perjanjian">Histori Perjanjian</div>
+                </a>
+            </li>
+        @endif
+
+        <li class="menu-header small"><span class="menu-header-text">System</span></li>
+        <li class="menu-item">
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <a href="{{ route('logout') }}" class="menu-link"
+                    onclick="event.preventDefault(); this.closest('form').submit();">
+                    <i class="icon-base ri menu-icon tf-icons ri-logout-circle-line"></i>
+                    <div data-i18n="Dashboard">Logout</div>
+                </a>
+            </form>
+        </li>
     </ul>
 </aside>
 

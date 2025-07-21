@@ -2,138 +2,131 @@
 
 @section('title', 'Edit Transaksi Setoran')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Edit Transaksi Setoran:
-                {{ $depositTransaction->agreement->agreement_number ?? 'N/A' }}</h4>
-            <div class="flex items-center gap-2">
-                @if (!$depositTransaction->is_validated && (Auth::user()->isAdmin() || Auth::user()->isLeader()))
-                    <form id="validate-form-{{ $depositTransaction->id }}"
-                        action="{{ route('masterdata.deposit-transactions.validate', $depositTransaction->id) }}"
-                        method="POST" style="display: none;">
-                        @csrf
-                    </form>
-                    <button type="button"
-                        class="px-6 py-2 rounded-md text-white bg-green-600 hover:bg-green-700 transition-all validate-deposit-btn"
-                        data-transaction-id="{{ $depositTransaction->id }}"
-                        data-transaction-amount="{{ number_format($depositTransaction->amount, 0, ',', '.') }}"
-                        data-agreement-number="{{ $depositTransaction->agreement->agreement_number ?? 'N/A' }}">
-                        Validasi Setoran
-                    </button>
-                @endif
-                <a href="{{ route('masterdata.deposit-transactions.index') }}"
-                    class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                    Kembali ke Daftar Transaksi Setoran
-                </a>
-            </div>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Edit Transaksi Setoran</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('masterdata.deposit-transactions.index') }}">Transaksi
+                            Setoran</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- Error Messages dari Laravel Validation --}}
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">Ada beberapa masalah dengan input Anda.</span>
-                <ul class="mt-3 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
-            <form action="{{ route('masterdata.deposit-transactions.update', $depositTransaction) }}" method="POST">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Detail Setoran untuk PKS: {{ $depositTransaction->agreement->agreement_number }}
+            </h5>
+            @if (!$depositTransaction->is_validated && (Auth::user()->isAdmin() || Auth::user()->isLeader()))
+                <form action="{{ route('masterdata.deposit-transactions.validate', $depositTransaction->id) }}"
+                    method="POST" class="form-validate">
+                    @csrf
+                    <button type="submit" class="btn btn-success"><i
+                            class="icon-base ri ri-check-double-line me-2"></i>Validasi Setoran Ini</button>
+                </form>
+            @endif
+        </div>
+        <div class="card-body">
+            <form action="{{ route('masterdata.deposit-transactions.update', $depositTransaction->id) }}" method="POST"
+                enctype="multipart/form-data">
                 @csrf
-                @method('PUT') {{-- Penting: Gunakan method PUT untuk update --}}
-
-                <h5 class="text-lg font-semibold text-default-800 mb-4">Detail Setoran</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label for="agreement_id" class="block text-sm font-medium text-default-700 mb-2">Pilih Perjanjian
-                            Aktif</label>
-                        <select name="agreement_id" id="agreement_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('agreement_id') border-red-500 @enderror select2-agreements"
-                            {{-- Tambahkan class select2-agreements --}} required {{ $depositTransaction->is_validated ? 'disabled' : '' }}>
-                            {{-- Disabled jika sudah divalidasi --}}
-                            @php
-                                // Ambil perjanjian yang sedang diedit atau dari old input
-                                $currentAgreement = $depositTransaction->agreement;
-                                if (old('agreement_id')) {
-                                    $currentAgreement = App\Models\Agreement::find(old('agreement_id'));
-                                }
-                            @endphp
-                            @if ($currentAgreement)
-                                <option value="{{ $currentAgreement->id }}" selected>
-                                    {{ $currentAgreement->agreement_number }} (Korlap:
-                                    {{ $currentAgreement->fieldCoordinator->user->name ?? 'N/A' }})
-                                    @if ($currentAgreement->parkingLocations->isNotEmpty())
-                                        - Lokasi: {{ $currentAgreement->parkingLocations->pluck('name')->join(', ') }}
-                                    @endif
+                @method('PATCH')
+                <div class="row g-6">
+                    <div class="col-12">
+                        <label for="agreement_id" class="form-label">Perjanjian Aktif</label>
+                        <select name="agreement_id" id="agreement_id" class="form-select select2-agreements" required
+                            {{ $depositTransaction->is_validated ? 'disabled' : '' }}>
+                            @if ($depositTransaction->agreement)
+                                <option value="{{ $depositTransaction->agreement->id }}" selected>
+                                    {{ $depositTransaction->agreement->agreement_number }} (Korlap:
+                                    {{ $depositTransaction->agreement->fieldCoordinator->user->name ?? 'N/A' }})
                                 </option>
-                            @else
-                                <option value="">Cari atau pilih perjanjian...</option> {{-- Placeholder untuk Select2 --}}
                             @endif
                         </select>
-                        @error('agreement_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                        @if ($depositTransaction->is_validated)
+                            <div class="form-text">Perjanjian tidak dapat diubah karena setoran sudah divalidasi.</div>
+                        @endif
                     </div>
-                    <div>
-                        <label for="deposit_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal
-                            Setoran</label>
-                        <input type="date" name="deposit_date" id="deposit_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('deposit_date') border-red-500 @enderror"
-                            value="{{ old('deposit_date', $depositTransaction->deposit_date?->format('Y-m-d')) }}" required
-                            {{ $depositTransaction->is_validated ? 'readonly' : '' }}> {{-- Readonly jika sudah divalidasi --}}
-                        @error('deposit_date')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="date" name="deposit_date"
+                                id="deposit_date" class="form-control"
+                                value="{{ old('deposit_date', $depositTransaction->deposit_date->format('Y-m-d')) }}"
+                                required {{ $depositTransaction->is_validated ? 'readonly' : '' }} /><label
+                                for="deposit_date">Tanggal Setoran</label></div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="amount" class="block text-sm font-medium text-default-700 mb-2">Jumlah Setoran
-                            (Rp)</label>
-                        <input type="number" name="amount" id="amount"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('amount') border-red-500 @enderror"
-                            value="{{ old('amount', $depositTransaction->amount) }}" placeholder="Contoh: 50000"
-                            min="0" required {{ $depositTransaction->is_validated ? 'readonly' : '' }}>
-                        {{-- Readonly jika sudah divalidasi --}}
-                        @error('amount')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="number" name="amount" id="amount"
+                                class="form-control" placeholder="Contoh: 50000"
+                                value="{{ old('amount', $depositTransaction->amount) }}" min="0" required
+                                {{ $depositTransaction->is_validated ? 'readonly' : '' }} /><label for="amount">Jumlah
+                                Setoran (Rp)</label></div>
                     </div>
-                    <div class="md:col-span-2">
-                        <label for="notes" class="block text-sm font-medium text-default-700 mb-2">Catatan
-                            (Opsional)</label>
-                        <textarea name="notes" id="notes" rows="3"
-                            class="form-textarea w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('notes') border-red-500 @enderror"
-                            placeholder="Masukkan catatan tambahan..." {{ $depositTransaction->is_validated ? 'readonly' : '' }}>{{ old('notes', $depositTransaction->notes) }}</textarea> {{-- Readonly jika sudah divalidasi --}}
-                        @error('notes')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <textarea name="notes" id="notes" class="form-control" placeholder="Masukkan catatan tambahan jika ada..."
+                                style="height: 80px;" {{ $depositTransaction->is_validated ? 'readonly' : '' }}>{{ old('notes', $depositTransaction->notes) }}</textarea><label for="notes">Catatan (Opsional)</label>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">Bukti Transfer</label>
+                        <div class="card">
+                            <div class="card-body text-center">
+                                {{-- ✅ PERBAIKAN DI SINI: Tampilkan gambar lama --}}
+                                @if ($depositTransaction->proof_of_transfer && file_exists(public_path($depositTransaction->proof_of_transfer)))
+                                    <img src="{{ asset($depositTransaction->proof_of_transfer) }}" alt="proof-placeholder"
+                                        class="d-block rounded-3 mx-auto mb-4" id="proof-preview"
+                                        style="max-height: 150px;" />
+                                @else
+                                    <img src="{{ asset('assets/img/illustrations/image-light.png') }}"
+                                        alt="proof-placeholder" class="d-block rounded-3 mx-auto mb-4" id="proof-preview"
+                                        style="max-height: 150px;" />
+                                @endif
+
+                                {{-- Tombol upload hanya muncul jika belum divalidasi --}}
+                                @if (!$depositTransaction->is_validated)
+                                    <label for="proof-upload" class="btn btn-primary mt-2">
+                                        <i class="icon-base ri-upload-2-line me-2"></i>Ubah Gambar
+                                        <input type="file" id="proof-upload" name="proof_of_transfer"
+                                            class="account-file-input" hidden accept="image/png, image/jpeg" />
+                                    </label>
+                                    <div id="proof-error" class="mt-2 text-danger text-sm"></div>
+                                @else
+                                    <p class="text-muted mb-0">Bukti transfer tidak dapat diubah setelah divalidasi.</p>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
-                    {{-- Tombol Simpan hanya jika belum divalidasi --}}
-                    @if (!$depositTransaction->is_validated)
-                        <button type="submit"
-                            class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                            Simpan Perubahan
-                        </button>
-                    @endif
+                <div class="pt-6 text-end">
                     <a href="{{ route('masterdata.deposit-transactions.index') }}"
-                        class="px-6 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">
-                        Batal
-                    </a>
+                        class="btn btn-outline-secondary">Batal</a>
+                    @if (!$depositTransaction->is_validated)
+                        <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                    @endif
                 </div>
             </form>
         </div>
@@ -141,64 +134,89 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+    <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- Client-side validation for amount to only allow numbers and decimals ---
-            const amountInput = document.getElementById('amount');
-            if (amountInput) {
-                amountInput.addEventListener('input', function(e) {
-                    let value = e.target.value;
-                    value = value.replace(/[^0-9.]/g, ''); // Remove non-numeric except dot
-                    const parts = value.split('.');
-                    if (parts.length > 2) {
-                        value = parts[0] + '.' + parts.slice(1).join(''); // Allow only one dot
-                    }
-                    e.target.value = value;
-                });
+        document.addEventListener("DOMContentLoaded", function() {
+            // ... (Script untuk Select2 dan konfirmasi validasi tidak berubah) ...
+            const agreementSelect = $("#agreement_id");
+            if (agreementSelect.length && !agreementSelect.prop("disabled")) {
+                agreementSelect.wrap('<div class="position-relative"></div>').select2({
+                    placeholder: "Cari atau pilih perjanjian...",
+                    dropdownParent: agreementSelect.parent(),
+                    allowClear: !0,
+                    ajax: {
+                        url: "{{ route('masterdata.search-active-agreements') }}",
+                        dataType: "json",
+                        delay: 250,
+                        data: e => ({
+                            term: e.term
+                        }),
+                        processResults: e => ({
+                            results: e.results
+                        }),
+                        cache: !0
+                    },
+                    minimumInputLength: 2
+                })
             }
-
-            // --- Initialize Select2 with AJAX for Agreements ---
-            const agreementSelect = $('.select2-agreements'); // Get jQuery object for Select2
-
-            agreementSelect.select2({
-                placeholder: 'Cari atau pilih perjanjian...',
-                allowClear: true, // Allows clearing the selection
-                width: 'resolve', // Ensures Select2 takes up 100% width
-                ajax: {
-                    url: '{{ route('masterdata.search-active-agreements') }}', // Endpoint AJAX
-                    dataType: 'json',
-                    delay: 250, // Delay dalam ms sebelum request dikirim
-                    data: function(params) {
-                        return {
-                            term: params.term, // Search term
-                            page: params.page // Current page (for pagination in Select2)
-                        };
-                    },
-                    processResults: function(data, params) {
-                        params.page = params.page || 1;
-                        return {
-                            results: data.results,
-                            pagination: {
-                                more: (params.page * 10) < data
-                                    .total // Asumsi backend mengembalikan 'total' jika ada pagination
-                            }
-                        };
-                    },
-                    cache: true
-                },
-                minimumInputLength: 1 // Minimum karakter untuk memulai pencarian
+            $(".form-validate").on("submit", function(e) {
+                e.preventDefault();
+                const t = this;
+                Swal.fire({
+                    title: "Validasi Setoran Ini?",
+                    text: "Tindakan ini tidak dapat dibatalkan.",
+                    icon: "question",
+                    showCancelButton: !0,
+                    confirmButtonColor: "#28a745",
+                    cancelButtonColor: "#6f6b7d",
+                    confirmButtonText: "Ya, Validasi!",
+                    cancelButtonText: "Batal"
+                }).then(e => {
+                    e.isConfirmed && t.submit()
+                })
             });
 
-            // --- Disable Select2 if the transaction is validated ---
-            // Check if the select element itself is disabled by Blade
-            const isSelectDisabledByBlade = agreementSelect.prop('disabled');
+            // --- Logika Upload & Kompresi Gambar ---
+            const fileInput = document.getElementById('proof-upload');
+            if (fileInput) {
+                const imagePreview = document.getElementById('proof-preview');
+                const errorDiv = document.getElementById('proof-error');
+                const defaultSrc = imagePreview.src;
 
-            if (isSelectDisabledByBlade) {
-                agreementSelect.select2('destroy'); // Destroy Select2 instance
-                agreementSelect.prop('disabled', true); // Ensure it's truly disabled
-                // You might want to add a visual cue that it's disabled, e.g., a gray background
-                agreementSelect.next('.select2-container').find('.select2-selection').css('background-color',
-                    '#e9ecef');
+                fileInput.addEventListener('change', async (e) => {
+                    const imageFile = e.target.files[0];
+                    if (!imageFile) {
+                        imagePreview.src = defaultSrc;
+                        return;
+                    }
+                    errorDiv.textContent = '';
+                    if (!['image/jpeg', 'image/png'].includes(imageFile.type)) {
+                        errorDiv.textContent = 'Hanya file JPG atau PNG.';
+                        fileInput.value = '';
+                        imagePreview.src = defaultSrc;
+                        return;
+                    }
+                    const options = {
+                        maxSizeMB: 0.3,
+                        maxWidthOrHeight: 1024,
+                        useWebWorker: true
+                    };
+                    try {
+                        const compressedFile = await imageCompression(imageFile, options);
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(new File([compressedFile], imageFile.name, {
+                            type: compressedFile.type
+                        }));
+                        fileInput.files = dataTransfer.files;
+                        imagePreview.src = URL.createObjectURL(compressedFile);
+                    } catch (error) {
+                        errorDiv.textContent = "Gagal memproses gambar.";
+                        fileInput.value = '';
+                        imagePreview.src = defaultSrc;
+                    }
+                });
             }
         });
     </script>

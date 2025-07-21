@@ -2,101 +2,166 @@
 
 @section('title', 'Edit Lokasi Parkir')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Edit Lokasi Parkir: {{ $parkingLocation->name }}</h4>
-            <a href="{{ route('masterdata.parking-locations.index') }}"
-                class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar Lokasi Parkir
-            </a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Edit Lokasi Parkir</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('masterdata.parking-locations.index') }}">Lokasi Parkir</a>
+                    </li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- Error Messages dari Laravel Validation --}}
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops!</strong>
-                <span class="block sm:inline">Ada beberapa masalah dengan input Anda.</span>
-                <ul class="mt-3 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
-            <form action="{{ route('masterdata.parking-locations.update', $parkingLocation) }}" method="POST">
+    <div class="card">
+        <div class="card-body">
+            <form action="{{ route('masterdata.parking-locations.update', $parkingLocation->id) }}" method="POST">
                 @csrf
-                @method('PUT') {{-- Penting: Gunakan method PUT untuk update --}}
+                @method('PATCH')
+                <div class="row g-6">
+                    <div class="col-12">
+                        <label class="form-label">1. Pilih Zona</label>
+                        <div class="d-flex pt-2">
+                            <div class="form-check me-4">
+                                <input name="zone" class="form-check-input" type="radio" value="Zona 2" id="zone2"
+                                    {{ old('zone', $parkingLocation->roadSection->zone) == 'Zona 2' ? 'checked' : '' }} />
+                                <label class="form-check-label" for="zone2"> Zona 2 </label>
+                            </div>
+                            <div class="form-check">
+                                <input name="zone" class="form-check-input" type="radio" value="Zona 3" id="zone3"
+                                    {{ old('zone', $parkingLocation->roadSection->zone) == 'Zona 3' ? 'checked' : '' }} />
+                                <label class="form-check-label" for="zone3"> Zona 3 </label>
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label for="road_section_id" class="block text-sm font-medium text-default-700 mb-2">Ruas
-                            Jalan</label>
-                        <select name="road_section_id" id="road_section_id"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('road_section_id') border-red-500 @enderror"
-                            required>
-                            <option value="">Pilih Ruas Jalan</option>
-                            @foreach ($roadSections as $roadSection)
-                                <option value="{{ $roadSection->id }}"
-                                    {{ old('road_section_id', $parkingLocation->road_section_id) == $roadSection->id ? 'selected' : '' }}>
-                                    {{ $roadSection->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <select class="form-select select2" id="road_section_id" name="road_section_id" required>
+                                {{-- Options akan diisi oleh JavaScript --}}
+                            </select>
+                            <label for="road_section_id">2. Pilih Ruas Jalan</label>
+                        </div>
                         @error('road_section_id')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-default-700 mb-2">Nama Lokasi
-                            Parkir</label>
-                        <input type="text" name="name" id="name"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('name') border-red-500 @enderror"
-                            value="{{ old('name', $parkingLocation->name) }}" placeholder="Contoh: Depan Toko ABC" required>
+
+                    <div class="col-12">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" class="form-control" id="name" name="name"
+                                placeholder="Contoh: Depan Toko ABC" value="{{ old('name', $parkingLocation->name) }}"
+                                required />
+                            <label for="name">3. Masukkan Nama Lokasi Parkir</label>
+                        </div>
                         @error('name')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="md:col-span-2">
-                        <label for="status" class="block text-sm font-medium text-default-700 mb-2">Status Lokasi</label>
-                        <select name="status" id="status"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500 @error('status') border-red-500 @enderror"
-                            required>
-                            {{-- Opsi status diubah menjadi Tersedia dan Tidak Tersedia --}}
-                            <option value="tersedia"
-                                {{ old('status', $parkingLocation->status) == 'tersedia' ? 'selected' : '' }}>Tersedia
-                            </option>
-                            <option value="tidak_tersedia"
-                                {{ old('status', $parkingLocation->status) == 'tidak_tersedia' ? 'selected' : '' }}>Tidak
-                                Tersedia</option>
-                        </select>
-                        @error('status')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                        Simpan Perubahan
-                    </button>
-                    <a href="{{ route('masterdata.parking-locations.index') }}"
-                        class="px-6 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">
-                        Batal
-                    </a>
+                <div class="pt-6 text-end">
+                    <a href="{{ route('masterdata.parking-locations.index') }}" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
     </div>
 @endsection
+
+@push('vendors-js')
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const roadSectionSelect = $('#road_section_id');
+            const radios = $('input[name="zone"]');
+
+            // Data dari PHP untuk JavaScript
+            const initialZone = '{{ $parkingLocation->roadSection->zone }}';
+            const initialRoadSectionId = '{{ $parkingLocation->road_section_id }}';
+
+            // Inisialisasi Select2
+            roadSectionSelect.select2({
+                placeholder: 'Pilih Ruas Jalan',
+                allowClear: true
+            });
+
+            // Fungsi untuk memuat ruas jalan berdasarkan zona
+            function loadRoadSections(zone, selectedId = null) {
+                roadSectionSelect.empty().append($('<option></option>').text('Memuat data...')).prop('disabled',
+                    true);
+                roadSectionSelect.val(null).trigger('change');
+
+                if (zone) {
+                    const url = `{{ url('masterdata/get-road-sections-by-zone') }}/${zone}`;
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            roadSectionSelect.empty().append($('<option></option>').attr('value', '')
+                                .text('Pilih Ruas Jalan'));
+                            if (data.length > 0) {
+                                $.each(data, function(key, value) {
+                                    roadSectionSelect.append($('<option></option>').attr(
+                                        'value', value.id).text(value.name));
+                                });
+                                roadSectionSelect.prop('disabled', false);
+
+                                // Jika ada ID yang harus dipilih, pilih ID tersebut
+                                if (selectedId) {
+                                    roadSectionSelect.val(selectedId).trigger('change');
+                                }
+                            } else {
+                                roadSectionSelect.empty().append($('<option></option>').attr('value',
+                                    '').text('Tidak ada ruas jalan di zona ini')).prop('disabled',
+                                    true);
+                            }
+                        },
+                        error: function() {
+                            roadSectionSelect.empty().append($('<option></option>').attr('value', '')
+                                .text('Gagal memuat data')).prop('disabled', true);
+                        }
+                    });
+                } else {
+                    roadSectionSelect.empty().append($('<option></option>').attr('value', '').text(
+                        'Pilih Zona terlebih dahulu')).prop('disabled', true);
+                }
+            }
+
+            // Panggil fungsi saat halaman pertama kali dimuat
+            if (initialZone) {
+                loadRoadSections(initialZone, initialRoadSectionId);
+            }
+
+            // Event listener untuk perubahan pada radio button zona
+            radios.on('change', function() {
+                const selectedZone = $(this).val();
+                loadRoadSections(selectedZone);
+            });
+        });
+    </script>
+@endpush

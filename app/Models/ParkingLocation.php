@@ -26,7 +26,7 @@ class ParkingLocation extends Model
     public function agreements()
     {
         return $this->belongsToMany(Agreement::class, 'agreement_parking_locations')
-            ->withPivot('assigned_date', 'remove_date', 'status')
+            ->withPivot('assigned_date', 'removed_date', 'status')
             ->withTimestamps();
     }
 }

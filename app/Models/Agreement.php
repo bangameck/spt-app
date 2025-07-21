@@ -51,7 +51,8 @@ class Agreement extends Model
     {
         // Perbaikan di sini: Menggunakan model pivot kustom
         return $this->belongsToMany(ParkingLocation::class, 'agreement_parking_locations')
-            ->using(AgreementParkingLocation::class) // <-- Tambahkan baris ini
+            ->using(AgreementParkingLocation::class)
+            // ✅ PASTIKAN NAMA 'removed_date' TERTULIS DENGAN BENAR DI SINI
             ->withPivot('assigned_date', 'removed_date', 'status')
             ->withTimestamps();
     }

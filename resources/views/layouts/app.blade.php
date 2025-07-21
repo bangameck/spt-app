@@ -26,7 +26,7 @@
         @stack('styles')
 
         <script src="{{ asset('assets/vendor/js/helpers.js') }}"></script>
-        <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script>
+        {{-- <script src="{{ asset('assets/vendor/js/template-customizer.js') }}"></script> --}}
         <script src="{{ asset('assets/js/config.js') }}"></script>
     </head>
 
@@ -44,9 +44,35 @@
 
                     <div class="content-wrapper">
                         <div class="container-xxl flex-grow-1 container-p-y">
+                            {{-- ✅ 1. SKELETON LOADER DIMULAI DI SINI --}}
+                            <div id="skeleton-loader">
+                                {{-- Ini adalah contoh kerangka untuk halaman dashboard. --}}
+                                {{-- Anda bisa membuat kerangka yang berbeda untuk layout halaman lain. --}}
+                                <div class="row g-6">
+                                    {{-- Skeleton untuk Info Cards --}}
+                                    @for ($i = 0; $i < 4; $i++)
+                                        <div class="col-sm-6 col-lg-3">
+                                            <div class="skeleton skeleton-card" style="height: 100px;"></div>
+                                        </div>
+                                    @endfor
 
-                            {{-- 3. Konten Dinamis --}}
-                            @yield('content')
+                                    {{-- Skeleton untuk Grafik Utama --}}
+                                    <div class="col-lg-8">
+                                        <div class="skeleton skeleton-card" style="height: 400px;"></div>
+                                    </div>
+
+                                    {{-- Skeleton untuk Info Samping --}}
+                                    <div class="col-lg-4">
+                                        <div class="skeleton skeleton-card mb-6" style="height: 120px;"></div>
+                                        <div class="skeleton skeleton-card" style="height: 260px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- ✅ 2. KONTEN ASLI HALAMAN (SEMBUNYIKAN PADA AWALNYA) --}}
+                            <div id="main-content" style="display: none;">
+                                @yield('content')
+                            </div>
 
                         </div>
                         {{-- 4. Footer --}}
@@ -72,6 +98,20 @@
         <script src="{{ asset('assets/js/main.js') }}"></script>
 
         @stack('scripts')
+        <script>
+            window.addEventListener('load', function() {
+                const skeleton = document.getElementById('skeleton-loader');
+                const content = document.getElementById('main-content');
+
+                if (skeleton && content) {
+                    // Beri sedikit jeda agar tidak terasa terlalu cepat
+                    setTimeout(() => {
+                        skeleton.style.display = 'none';
+                        content.style.display = 'block';
+                    }, 250); // Jeda 250 milidetik
+                }
+            });
+        </script>
     </body>
 
 </html>

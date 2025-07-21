@@ -70,6 +70,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Routes untuk Manajemen Lokasi Parkir Ruas Jalan
         Route::resource('parking-locations', ParkingLocationController::class);
 
+        // ✅ TAMBAHKAN ROUTE BARU INI
+        Route::get('get-road-sections-by-zone/{zone}', [ParkingLocationController::class, 'getRoadSectionsByZone'])
+            ->name('road-sections.getByZone');
+
+        Route::get('get-parking-locations-by-road-section/{roadSectionId}', [ParkingLocationController::class, 'getParkingLocationsByRoadSection'])
+            ->name('get-parking-locations-by-road-section');
+
         // Routes untuk Manajemen Perjanjian Kerjasama
         Route::resource('agreements', AgreementController::class);
 
@@ -85,6 +92,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
             ->name('deposit-transactions.validate');
 
+        // ✅ TAMBAHKAN ROUTE BARU INI
+        Route::get('deposit-transactions/{depositTransaction}/pdf', [DepositTransactionController::class, 'generatePdf'])
+            ->name('deposit-transactions.pdf');
+
         // START: Route untuk Laporan Deposit
         Route::get('deposit-reports', [DepositReportController::class, 'index'])->name('deposit-reports.index');
         // END: Route untuk Laporan Deposit
@@ -94,8 +105,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // END: Route untuk Laporan Deposit (Cetak PDF)
 
         // Route AJAX untuk mengambil lokasi parkir berdasarkan ruas jalan
-        Route::get('get-parking-locations-by-road-section/{roadSectionId}', [ParkingLocationController::class, 'getParkingLocationsByRoadSection'])
-            ->name('get-parking-locations-by-road-section');
 
         // Routes untuk Manajemen Transaksi Setoran
         Route::resource('deposit-transactions', DepositTransactionController::class);

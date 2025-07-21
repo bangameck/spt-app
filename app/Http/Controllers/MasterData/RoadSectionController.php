@@ -38,12 +38,16 @@ class RoadSectionController extends Controller
      */
     public function store(Request $request)
     {
+        // ✅ Tambahkan validasi untuk 'zone'
         $validatedData = $request->validate([
             'name' => 'required|string|max:255|unique:road_sections,name',
+            'zone' => 'required|string|in:Zona 2,Zona 3',
         ]);
+
         RoadSection::create($validatedData);
+
         return redirect()->route('masterdata.road-sections.index') // <--- Ubah nama route
-            ->with('success', 'Ruas jalan "' . $validatedData['name'] . '" berhasil ditambahkan!');
+            ->with('success', 'Ruas jalan ' . $validatedData['name'] . ' berhasil ditambahkan!');
     }
 
     /**
@@ -59,17 +63,17 @@ class RoadSectionController extends Controller
      */
     public function update(Request $request, RoadSection $roadSection)
     {
+        // ✅ Validasi disesuaikan untuk update
         $validatedData = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('road_sections', 'name')->ignore($roadSection->id),
-            ],
+            // Pastikan nama unik, kecuali untuk data itu sendiri
+            'name' => ['required', 'string', 'max:255', Rule::unique('road_sections')->ignore($roadSection->id)],
+            'zone' => 'required|string|in:Zona 2,Zona 3',
         ]);
+
         $roadSection->update($validatedData);
-        return redirect()->route('masterdata.road-sections.index') // <--- Ubah nama route
-            ->with('success', 'Ruas jalan "' . $roadSection->name . '" berhasil diperbarui!');
+
+        return redirect()->route('masterdata.road-sections.index')
+            ->with('success', 'Ruas Jalan ' . $roadSection->name . ' berhasil diperbarui.');
     }
 
     /**

@@ -11,12 +11,18 @@ class RoadSection extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name'
+        'name',
+        'zone',
     ];
 
     //Relaso ParkingLocation
-    public function ParkingLocation()
+    // public function ParkingLocation()
+    // {
+    //     return $this->hasMany(ParkingLocation::class);
+    // }
+
+    public function parkingLocations()
     {
-        return $this->hasMany(ParkingLocation::class);
+        return $this->hasMany(ParkingLocation::class, 'road_section_id');
     }
 }

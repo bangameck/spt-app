@@ -47,19 +47,42 @@ class AgreementController extends Controller
     public function create()
     {
         $leaders = Leader::with('user')->get();
-        $roadSections = RoadSection::orderBy('name')->get();
-        $availableParkingLocations = ParkingLocation::where('status', 'tersedia')->with('roadSection')->get();
-
-        // --- PERUBAHAN DI SINI ---
-        // Ambil hanya koordinator yang tidak memiliki perjanjian 'active'
+        // Ambil hanya korlap yang belum punya PKS aktif
         $fieldCoordinators = FieldCoordinator::with('user')
             ->whereDoesntHave('agreements', function ($query) {
                 $query->where('status', 'active');
             })
             ->get();
-        // --- AKHIR PERUBAHAN ---
 
-        return view('staff.agreements.create', compact('leaders', 'fieldCoordinators', 'roadSections', 'availableParkingLocations'));
+        // TIDAK PERLU mengirim data lokasi atau ruas jalan dari sini lagi.
+        return view('staff.agreements.create', compact('leaders', 'fieldCoordinators'));
+    }
+
+    /**
+     * ✅ METHOD BARU untuk mengambil Ruas Jalan berdasarkan Zona.
+     */
+    public function getRoadSectionsByZone($zone)
+    {
+        $roadSections = RoadSection::where('zone', $zone)
+            // Penting: Hanya ambil ruas jalan yang memiliki lokasi parkir tersedia
+            ->whereHas('parkingLocations', fn($q) => $q->where('status', 'tersedia'))
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']); // Kirim hanya ID dan Nama untuk efisiensi
+
+        return response()->json($roadSections);
+    }
+
+    /**
+     * ✅ METHOD BARU untuk mengambil Lokasi Parkir berdasarkan Ruas Jalan.
+     */
+    public function getParkingLocationsByRoadSection($roadSectionId)
+    {
+        $locations = ParkingLocation::where('road_section_id', $roadSectionId)
+            ->where('status', 'tersedia') // Hanya yang statusnya tersedia
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']); // Kirim hanya ID dan Nama
+
+        return response()->json($locations);
     }
 
     /**
@@ -126,16 +149,45 @@ class AgreementController extends Controller
      */
     public function edit(Agreement $agreement)
     {
+        // Memuat relasi yang dibutuhkan
+        $agreement->load('leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection');
         $leaders = Leader::with('user')->get();
-        $fieldCoordinators = FieldCoordinator::with('user')->get();
-        $roadSections = RoadSection::orderBy('name')->get();
-        $availableParkingLocations = ParkingLocation::where('status', 'tersedia')
-            ->orWhereHas('agreements', function ($query) use ($agreement) {
-                $query->where('agreement_parking_locations.agreement_id', $agreement->id);
-            })->with('roadSection')->get();
-        $currentParkingLocationIds = $agreement->activeParkingLocations()->pluck('parking_locations.id')->toArray();
 
-        return view('staff.agreements.edit', compact('agreement', 'leaders', 'fieldCoordinators', 'roadSections', 'availableParkingLocations', 'currentParkingLocationIds'));
+        // 1. Ambil semua ID lokasi parkir yang saat ini aktif untuk PKS ini
+        $currentParkingLocationIds = $agreement->activeParkingLocations->pluck('id')->toArray();
+
+        // 2. Tentukan zona dari PKS ini (berdasarkan lokasi pertama yang terikat)
+        $firstLocation = $agreement->activeParkingLocations->first();
+        // Jika tidak ada lokasi sama sekali, zona akan null
+        $initialZone = $firstLocation ? $firstLocation->roadSection->zone : null;
+
+        $parkingLocationsForCheckboxes = collect();
+        if ($initialZone) {
+            // 3. Ambil semua lokasi yang bisa dipilih di zona ini:
+            //    - yang statusnya 'tersedia'
+            //    - ATAU yang sudah terpilih di PKS ini (meskipun statusnya 'tidak_tersedia')
+            $parkingLocationsForCheckboxes = ParkingLocation::with('roadSection')
+                ->whereHas('roadSection', function ($q) use ($initialZone) {
+                    $q->where('zone', $initialZone);
+                })
+                ->where(function ($q) use ($currentParkingLocationIds) {
+                    $q->where('status', 'tersedia')
+                        ->orWhereIn('id', $currentParkingLocationIds);
+                })
+                ->get();
+        }
+
+        // 4. Ambil semua ruas jalan untuk dropdown filter
+        $allRoadSections = RoadSection::orderBy('name')->get();
+
+        return view('staff.agreements.edit', compact(
+            'agreement',
+            'leaders',
+            'currentParkingLocationIds',
+            'initialZone',
+            'allRoadSections',
+            'parkingLocationsForCheckboxes' // Kirim data ini ke view
+        ));
     }
 
     /**

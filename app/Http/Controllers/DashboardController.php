@@ -20,58 +20,74 @@ class DashboardController extends Controller
      */
     public function adminDashboard()
     {
-        // 1. Data untuk Info Cards
-        $totalCoordinators = FieldCoordinator::count();
-        $totalActiveAgreements = Agreement::where('status', 'active')->count();
-        $totalParkingLocationsInPKS = DB::table('agreement_parking_locations as apl')
-            ->join('agreements as a', 'apl.agreement_id', '=', 'a.id')
-            ->where('a.status', 'active')->whereNull('a.deleted_at')
-            ->distinct('apl.parking_location_id')->count('apl.parking_location_id');
-
-        // 2. Data untuk Grafik & Setoran
+        // --- 1. Data untuk Info Cards ---
+        $currentLeader = Leader::with('user')->latest()->first();
+        $activeBankAccount = BludBankAccount::where('is_active', true)->first();
         $currentYearValidatedDeposit = DepositTransaction::where('is_validated', true)
             ->whereYear('deposit_date', now()->year)->sum('amount');
 
+        // --- 2. Data untuk Tabel "Terbaru" (Max 8) ---
+        $recentDeposits = DepositTransaction::with('agreement.fieldCoordinator.user')
+            ->whereHas('agreement')
+            ->where('is_validated', true)
+            ->latest('deposit_date')->limit(8)->get();
+
+        $recentParkingLocations = ParkingLocation::with('roadSection')->latest()->limit(8)->get();
+        $recentCoordinators = FieldCoordinator::with('user')->latest()->limit(8)->get();
+
+        // --- 3. Data untuk Grafik ---
+
+        // A. Grafik Setoran per Bulan (Mixed Chart)
         $monthlyDeposits = DepositTransaction::select(
             DB::raw('MONTH(deposit_date) as month'),
             DB::raw('SUM(amount) as total')
         )
             ->where('is_validated', true)->whereYear('deposit_date', now()->year)
-            ->groupBy('month')->orderBy('month')->get()->pluck('total', 'month')->all();
+            ->groupBy('month')->orderBy('month')->pluck('total', 'month')->all();
 
-        $chartLabels = [];
-        $chartData = [];
+        $mainChartLabels = [];
+        $mainChartData = [];
         for ($m = 1; $m <= 12; $m++) {
-            $chartLabels[] = \Carbon\Carbon::create()->month($m)->translatedFormat('F');
-            $chartData[] = $monthlyDeposits[$m] ?? 0;
+            $mainChartLabels[] = \Carbon\Carbon::create()->month($m)->translatedFormat('F');
+            $mainChartData[] = $monthlyDeposits[$m] ?? 0;
         }
 
-        // 3. ✅ DATA BARU UNTUK TABEL & INFO
-        $recentDeposits = DepositTransaction::with('agreement.fieldCoordinator.user')
-            ->whereHas('agreement') // <-- TAMBAHKAN BARIS INI
-            ->where('is_validated', true)
-            ->latest('deposit_date')->limit(5)->get();
+        // B. Grafik Zona (Polar Area Charts)
+        $roadSectionsByZone = RoadSection::select('zone', DB::raw('count(*) as total'))
+            ->groupBy('zone')->pluck('total', 'zone')->all();
 
-        $recentParkingLocations = ParkingLocation::latest()->limit(5)->get();
+        $locationsByZone = ParkingLocation::join('road_sections', 'parking_locations.road_section_id', '=', 'road_sections.id')
+            ->select('road_sections.zone', DB::raw('count(parking_locations.id) as total'))
+            ->groupBy('road_sections.zone')->pluck('total', 'zone')->all();
 
-        $recentCoordinators = FieldCoordinator::with('user')->latest()->limit(5)->get();
+        $zoneChartData = [
+            'labels' => array_keys($roadSectionsByZone),
+            'roadSections' => array_values($roadSectionsByZone),
+            'parkingLocations' => array_values($locationsByZone)
+        ];
 
-        $activeBankAccount = BludBankAccount::where('is_active', true)->first();
+        // C. Grafik Titik per Ruas Jalan (Bar Chart)
+        $locationsPerRoadSection = RoadSection::withCount('parkingLocations')
+            ->orderBy('parking_locations_count', 'desc')
+            ->limit(10)->get(); // Ambil 10 teratas
 
-        $currentLeader = Leader::with('user')->latest()->first();
+        $barChartData = [
+            'labels' => $locationsPerRoadSection->pluck('name'),
+            'data' => $locationsPerRoadSection->pluck('parking_locations_count')
+        ];
+
 
         return view('admin.dashboard', compact(
-            'totalCoordinators',
-            'totalActiveAgreements',
-            'totalParkingLocationsInPKS',
+            'currentLeader',
+            'activeBankAccount',
             'currentYearValidatedDeposit',
-            'chartLabels',
-            'chartData',
             'recentDeposits',
             'recentParkingLocations',
             'recentCoordinators',
-            'activeBankAccount',
-            'currentLeader'
+            'mainChartLabels',
+            'mainChartData',
+            'zoneChartData',
+            'barChartData'
         ));
     }
 

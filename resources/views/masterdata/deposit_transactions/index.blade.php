@@ -2,51 +2,39 @@
 
 @section('title', 'Daftar Transaksi Setoran')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Daftar Transaksi Setoran</h4>
-            <a href="{{ route('masterdata.deposit-transactions.create') }}"
-                class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                Catat Setoran Baru
-            </a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Transaksi Setoran</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item active">Transaksi Setoran</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- SweetAlert2 Success Message --}}
-        @if (session('success'))
-            <div id="success-alert" data-message="{{ session('success') }}" style="display: none;"></div>
-        @endif
-
-        @if (session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Error!</strong>
-                <span class="block sm:inline">{{ session('error') }}</span>
-                <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-                    <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20">
-                        <title>Close</title>
-                        <path
-                            d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.697l-2.651 2.652a1.2 1.2 0 1 1-1.697-1.697L8.303 10 5.651 7.348a1.2 1.2 0 1 1 1.697-1.697L10 8.303l2.651-2.652a1.2 1.2 0 0 1 1.697 1.697L11.697 10l2.651 2.651a1.2 1.2 0 0 1 0 1.698z" />
-                    </svg>
-                </span>
-            </div>
-        @endif
-
-        <div class="card bg-white shadow rounded-lg p-6">
-            {{-- Search Form --}}
-            <form action="{{ route('masterdata.deposit-transactions.index') }}" method="GET" class="mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label for="search_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal
-                            Spesifik</label>
-                        <input type="date" name="search_date" id="search_date"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
+    {{-- Filter Card --}}
+    <div class="card mb-6">
+        <div class="card-header">
+            <h5 class="card-title mb-0">Filter Pencarian</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ route('masterdata.deposit-transactions.index') }}" method="GET">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <label for="search_date" class="form-label">Tanggal Spesifik</label>
+                        <input type="date" name="search_date" id="search_date" class="form-control"
                             value="{{ $searchDate ?? '' }}">
                     </div>
-                    <div>
-                        <label for="search_month" class="block text-sm font-medium text-default-700 mb-2">Bulan</label>
-                        <select name="search_month" id="search_month"
-                            class="form-select w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500">
+                    <div class="col-md-3">
+                        <label for="search_month" class="form-label">Bulan</label>
+                        <select name="search_month" id="search_month" class="form-select">
                             <option value="">Semua Bulan</option>
                             @for ($m = 1; $m <= 12; $m++)
                                 <option value="{{ sprintf('%02d', $m) }}"
@@ -55,221 +43,195 @@
                             @endfor
                         </select>
                     </div>
-                    <div>
-                        <label for="search_year" class="block text-sm font-medium text-default-700 mb-2">Tahun</label>
+                    <div class="col-md-2">
+                        <label for="search_year" class="form-label">Tahun</label>
                         <input type="number" name="search_year" id="search_year" min="2020" max="{{ date('Y') + 5 }}"
-                            class="form-input w-full px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                            value="{{ $searchYear ?? date('Y') }}"> {{-- Default ke tahun sekarang --}}
+                            class="form-control" value="{{ $searchYear ?? date('Y') }}">
                     </div>
-                    <div class="lg:col-span-1 md:col-span-3"> {{-- Rentang tanggal bisa lebih panjang --}}
-                        <label for="start_date_range" class="block text-sm font-medium text-default-700 mb-2">Rentang
-                            Waktu</label>
-                        <div class="flex items-center gap-2">
-                            <input type="date" name="start_date_range" id="start_date_range"
-                                class="form-input w-1/2 px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
+                    <div class="col-md-4">
+                        <label class="form-label">Rentang Waktu</label>
+                        <div class="input-group">
+                            <input type="date" name="start_date_range" id="start_date_range" class="form-control"
                                 value="{{ $startDateRange ?? '' }}">
-                            <span>-</span>
-                            <input type="date" name="end_date_range" id="end_date_range"
-                                class="form-input w-1/2 px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
+                            <span class="input-group-text">s/d</span>
+                            <input type="date" name="end_date_range" id="end_date_range" class="form-control"
                                 value="{{ $endDateRange ?? '' }}">
                         </div>
                     </div>
-                    <div class="md:col-span-3 lg:col-span-4 flex items-center gap-2 mt-2">
-                        <input type="text" name="search" placeholder="Cari nomor perjanjian / nama korlap / kreator..."
-                            class="form-input flex-grow px-4 py-2 border rounded-md text-default-800 focus:ring-primary-500 focus:border-primary-500"
-                            value="{{ $search ?? '' }}">
-                        <button type="submit"
-                            class="px-4 py-2 rounded-md bg-primary-600 text-white hover:bg-primary-700 transition-all">
-                            Cari
-                        </button>
-                        @if ($search || $searchDate || $searchMonth || $searchYear || $startDateRange || $endDateRange)
-                            <a href="{{ route('masterdata.deposit-transactions.index') }}"
-                                class="px-4 py-2 rounded-md bg-default-200 text-default-800 hover:bg-default-300 transition-all">
-                                Reset
-                            </a>
-                        @endif
+                </div>
+                <div class="row g-4 mt-2">
+                    <div class="col-12">
+                        <label for="search" class="form-label">Pencarian Umum</label>
+                        <input type="text" name="search" id="search" class="form-control"
+                            placeholder="Cari no. PKS, nama korlap, atau nominal..." value="{{ $search ?? '' }}">
                     </div>
                 </div>
+                <div class="pt-4 text-end">
+                    <a href="{{ route('masterdata.deposit-transactions.index') }}"
+                        class="btn btn-outline-secondary">Reset</a>
+                    <button type="submit" class="btn btn-primary">Cari Transaksi</button>
+                </div>
             </form>
+        </div>
+    </div>
 
-            <div id="deposit-transactions-table-container" class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                <table class="w-full text-sm text-left text-default-500">
-                    <thead class="text-xs text-default-700 uppercase bg-default-50">
+
+    {{-- Daftar Transaksi --}}
+    <div class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between gap-4">
+            <div class="card-title mb-0">
+                <h5 class="mb-1">Daftar Semua Transaksi Setoran</h5>
+                <p class="text-muted mb-0">Total {{ $depositTransactions->total() }} transaksi ditemukan.</p>
+            </div>
+            <div class="d-flex justify-content-md-end align-items-center">
+                <a href="{{ route('masterdata.deposit-transactions.create') }}" class="btn btn-primary">
+                    <i class="icon-base ri ri-add-line me-2"></i>Catat Setoran
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-3">No. Perjanjian</th>
-                            <th scope="col" class="px-6 py-3">Korlap</th>
-                            <th scope="col" class="px-6 py-3">Tanggal Setoran</th>
-                            <th scope="col" class="px-6 py-3">Jumlah Setoran (Rp)</th>
-                            <th scope="col" class="px-6 py-3">Status Validasi</th>
-                            <th scope="col" class="px-6 py-3">Input Oleh</th>
-                            <th scope="col" class="px-6 py-3">Aksi</th>
+                            <th>No. Perjanjian</th>
+                            <th>Koordinator</th>
+                            <th>Tgl Setor</th>
+                            <th>Jumlah</th>
+                            <th>Status</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="table-border-bottom-0">
                         @forelse ($depositTransactions as $transaction)
-                            <tr class="bg-white border-b hover:bg-default-50">
-                                <td class="px-6 py-4 font-medium text-default-900 whitespace-nowrap">
-                                    {{ $transaction->agreement->agreement_number ?? 'N/A' }}
+                            <tr>
+                                <td><span class="fw-medium">{{ $transaction->agreement->agreement_number ?? 'N/A' }}</span>
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ $transaction->agreement->fieldCoordinator->user->name ?? 'N/A' }}
+                                <td>{{ $transaction->agreement->fieldCoordinator->user->name ?? 'N/A' }}</td>
+                                <td>{{ $transaction->deposit_date->format('d M Y') }}</td>
+                                <td><span class="fw-medium">Rp
+                                        {{ number_format($transaction->amount, 0, ',', '.') }}</span></td>
+                                <td>
+                                    @if ($transaction->is_validated)
+                                        <span class="badge rounded-pill bg-label-success">Tervalidasi</span>
+                                    @else
+                                        <span class="badge rounded-pill bg-label-warning">Pending</span>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ $transaction->deposit_date->format('d M Y') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    Rp {{ number_format($transaction->amount, 0, ',', '.') }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span
-                                        class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium {{ $transaction->is_validated ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                        {{ $transaction->is_validated ? 'Divalidasi' : 'Belum Divalidasi' }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    {{ $transaction->creator->name ?? 'N/A' }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center space-x-3">
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        {{-- ✅ TOMBOL DETAIL DITAMBAHKAN DI SINI --}}
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('masterdata.deposit-transactions.show', $transaction->id) }}"
+                                            data-bs-toggle="tooltip" title="Lihat Detail">
+                                            <i class="icon-base ri ri-eye-line"></i>
+                                        </a>
                                         @if (!$transaction->is_validated && (Auth::user()->isAdmin() || Auth::user()->isLeader()))
-                                            <form id="validate-form-{{ $transaction->id }}"
+                                            <form
                                                 action="{{ route('masterdata.deposit-transactions.validate', $transaction->id) }}"
-                                                method="POST" style="display: none;">
+                                                method="POST" class="form-validate">
                                                 @csrf
+                                                <button type="submit" class="btn btn-sm btn-icon"
+                                                    data-bs-toggle="tooltip" title="Validasi Setoran"><i
+                                                        class="icon-base ri ri-check-double-line text-success"></i></button>
                                             </form>
-                                            <button type="button"
-                                                class="font-medium text-green-600 hover:underline validate-deposit-btn"
-                                                data-transaction-id="{{ $transaction->id }}"
-                                                data-transaction-amount="{{ number_format($transaction->amount, 0, ',', '.') }}"
-                                                data-agreement-number="{{ $transaction->agreement->agreement_number ?? 'N/A' }}">
-                                                Validasi
-                                            </button>
                                         @endif
-                                        {{-- Tombol Edit hanya jika belum divalidasi --}}
                                         @if (!$transaction->is_validated)
-                                            <a href="{{ route('masterdata.deposit-transactions.edit', $transaction) }}"
-                                                class="font-medium text-blue-600 hover:underline">Edit</a>
+                                            <a class="btn btn-sm btn-icon"
+                                                href="{{ route('masterdata.deposit-transactions.edit', $transaction->id) }}"
+                                                data-bs-toggle="tooltip" title="Edit">
+                                                <i class="icon-base ri ri-pencil-line"></i>
+                                            </a>
                                         @endif
-                                        <form id="delete-form-deposit-transaction-{{ $transaction->id }}"
+                                        <form
                                             action="{{ route('masterdata.deposit-transactions.destroy', $transaction->id) }}"
-                                            method="POST" style="display: none;">
+                                            method="POST" class="form-delete">
                                             @csrf
                                             @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
+                                                title="Hapus">
+                                                <i class="icon-base ri ri-delete-bin-line"></i>
+                                            </button>
                                         </form>
-                                        <button type="button"
-                                            class="font-medium text-red-600 hover:underline ml-2 delete-deposit-transaction-btn"
-                                            data-transaction-id="{{ $transaction->id }}"
-                                            data-transaction-amount="{{ number_format($transaction->amount, 0, ',', '.') }}"
-                                            data-agreement-number="{{ $transaction->agreement->agreement_number ?? 'N/A' }}">
-                                            Hapus
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
                         @empty
-                            <tr class="bg-white border-b">
-                                <td colspan="7" class="px-6 py-4 text-center text-default-500">Tidak ada transaksi
-                                    setoran ditemukan.</td>
+                            <tr>
+                                <td colspan="6" class="text-center">Tidak ada data transaksi ditemukan.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
-            {{-- Pagination Links --}}
             <div class="mt-4">
-                {{ $depositTransactions->appends(request()->except('page'))->links('vendor.pagination.tailwind') }}
+                {{ $depositTransactions->appends(request()->query())->links() }}
             </div>
         </div>
     </div>
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- SweetAlert2 for Delete Confirmation (Deposit Transaction) ---
-            document.getElementById('deposit-transactions-table-container').addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('delete-deposit-transaction-btn')) {
-                    e.preventDefault();
+        document.addEventListener("DOMContentLoaded", function() {
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            @endif
 
-                    const transactionId = e.target.dataset.transactionId;
-                    const agreementNumber = e.target.dataset.agreementNumber;
-                    const transactionAmount = e.target.dataset.transactionAmount;
-
-                    if (typeof Swal === 'undefined') {
-                        console.error('SweetAlert2 (Swal) is not loaded.');
-                        alert(`Gagal menghapus setoran. SweetAlert2 tidak ditemukan.`);
-                        return;
-                    }
-
+            // Konfirmasi Hapus
+            document.querySelectorAll('.form-delete').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
                     Swal.fire({
-                        title: 'Apakah Anda yakin?',
-                        text: `Anda akan menghapus setoran sebesar Rp ${transactionAmount} untuk perjanjian ${agreementNumber}. Data yang dihapus tidak dapat dikembalikan!`,
+                        title: 'Anda Yakin?',
+                        text: "Data setoran yang dihapus tidak dapat dikembalikan!",
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
+                        cancelButtonColor: '#6f6b7d',
                         confirmButtonText: 'Ya, Hapus!',
                         cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            document.getElementById('delete-form-deposit-transaction-' +
-                                transactionId).submit();
+                            form.submit();
                         }
                     });
-                }
+                });
             });
 
-            // --- SweetAlert2 for Validate Deposit Button ---
-            document.getElementById('deposit-transactions-table-container').addEventListener('click', function(e) {
-                if (e.target && e.target.classList.contains('validate-deposit-btn')) {
-                    e.preventDefault();
-
-                    const transactionId = e.target.dataset.transactionId;
-                    const agreementNumber = e.target.dataset.agreementNumber;
-                    const transactionAmount = e.target.dataset.transactionAmount;
-
-                    if (typeof Swal === 'undefined') {
-                        console.error('SweetAlert2 (Swal) is not loaded.');
-                        alert(`Gagal memvalidasi setoran. SweetAlert2 tidak ditemukan.`);
-                        return;
-                    }
-
+            // Konfirmasi Validasi
+            document.querySelectorAll('.form-validate').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
                     Swal.fire({
-                        title: 'Validasi Setoran?',
-                        text: `Anda yakin ingin memvalidasi setoran sebesar Rp ${transactionAmount} untuk perjanjian ${agreementNumber}?`,
+                        title: 'Validasi Setoran Ini?',
+                        text: "Tindakan ini tidak dapat dibatalkan.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#d33',
+                        cancelButtonColor: '#6f6b7d',
                         confirmButtonText: 'Ya, Validasi!',
                         cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            document.getElementById('validate-form-' + transactionId).submit();
+                            form.submit();
                         }
                     });
-                }
-            });
-
-            // --- SweetAlert2 Success Message ---
-            const successAlert = document.getElementById('success-alert');
-            if (successAlert) {
-                const message = successAlert.dataset.message;
-                if (typeof Swal === 'undefined') {
-                    console.error('SweetAlert2 (Swal) is not loaded for success message.');
-                    alert(message);
-                    return;
-                }
-                Swal.fire({
-                    title: 'Berhasil!',
-                    text: message,
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                    timer: 3000,
-                    timerProgressBar: true
                 });
-            }
+            });
         });
     </script>
 @endpush

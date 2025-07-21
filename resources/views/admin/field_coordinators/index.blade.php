@@ -91,10 +91,16 @@
                                 <td><span class="badge bg-label-success">Aktif</span></td>
                                 <td class="text-center">
                                     <div class="d-flex align-items-center justify-content-center">
+                                        {{-- ✅ TOMBOL DETAIL DITAMBAHKAN DI SINI --}}
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('admin.field-coordinators.show', $coordinator->id) }}"
+                                            data-bs-toggle="tooltip" title="Lihat Detail">
+                                            <i class="icon-base ri ri-eye-line icon-22px"></i>
+                                        </a>
                                         <a class="btn btn-sm btn-icon"
                                             href="{{ route('admin.field-coordinators.edit', $coordinator->id) }}"
                                             data-bs-toggle="tooltip" title="Edit Koordinator">
-                                            <i class="icon-base ri ri-pencil-line"></i>
+                                            <i class="icon-base ri ri-pencil-line icon-22px"></i>
                                         </a>
                                         <form action="{{ route('admin.field-coordinators.destroy', $coordinator->id) }}"
                                             method="POST" class="form-delete">
@@ -102,7 +108,7 @@
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
                                                 title="Hapus Koordinator">
-                                                <i class="icon-base ri ri-delete-bin-line"></i>
+                                                <i class="icon-base ri ri-delete-bin-line icon-22px"></i>
                                             </button>
                                         </form>
                                     </div>

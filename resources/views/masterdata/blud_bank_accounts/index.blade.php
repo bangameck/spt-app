@@ -2,79 +2,140 @@
 
 @section('title', 'Manajemen Rekening BLUD')
 
+@push('styles')
+    {{-- CSS untuk SweetAlert2 --}}
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
+@endpush
+
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Manajemen Rekening BLUD</h4>
-            <a href="{{ route('admin.blud-bank-accounts.create') }}"
-                class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                <i class="i-lucide-plus-circle me-2"></i> Tambah Rekening
-            </a>
+    {{-- Page Title & Breadcrumb --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Manajemen Rekening BLUD</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
+                    <li class="breadcrumb-item active">Rekening BLUD</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        @if (session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <span class="block sm:inline">{{ session('success') }}</span>
+    {{-- Daftar Rekening --}}
+    <div class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between gap-4">
+            <div class="card-title mb-0">
+                <h5 class="mb-1">Daftar Rekening BLUD</h5>
+                <p class="text-muted mb-0">Total {{ $accounts->total() }} rekening terdaftar.</p>
             </div>
-        @endif
-
-        <div class="card bg-white shadow rounded-lg">
-            <div class="p-6">
-                <div class="relative overflow-x-auto">
-                    <table class="w-full text-sm text-left text-default-500">
-                        <thead class="text-xs text-default-700 uppercase bg-default-50">
+            <div class="d-flex justify-content-md-end align-items-center">
+                <a href="{{ route('admin.blud-bank-accounts.create') }}" class="btn btn-primary">
+                    <i class="icon-base ri-add-line me-2"></i>Tambah Rekening
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            @if (session('success'))
+                {{-- Notifikasi akan ditangani oleh SweetAlert2 --}}
+            @endif
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nama Bank</th>
+                            <th>Nomor Rekening</th>
+                            <th>Atas Nama</th>
+                            <th>Tanggal Mulai</th>
+                            <th>Status</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-border-bottom-0">
+                        @forelse ($accounts as $account)
                             <tr>
-                                <th scope="col" class="px-6 py-3">Nama Bank</th>
-                                <th scope="col" class="px-6 py-3">Nomor Rekening</th>
-                                <th scope="col" class="px-6 py-3">Atas Nama</th>
-                                <th scope="col" class="px-6 py-3">Tanggal Mulai</th>
-                                <th scope="col" class="px-6 py-3">Status</th>
-                                <th scope="col" class="px-6 py-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($accounts as $account)
-                                <tr class="bg-white border-b hover:bg-default-50">
-                                    <td class="px-6 py-4 font-medium text-default-900">{{ $account->bank_name }}</td>
-                                    <td class="px-6 py-4">{{ $account->account_number }}</td>
-                                    <td class="px-6 py-4">{{ $account->account_name }}</td>
-                                    <td class="px-6 py-4">{{ $account->start_date->format('d M Y') }}</td>
-                                    <td class="px-6 py-4">
-                                        @if ($account->is_active)
-                                            <span
-                                                class="px-2 py-1 font-semibold text-xs leading-tight text-green-700 bg-green-100 rounded-full">Aktif</span>
-                                        @else
-                                            <span
-                                                class="px-2 py-1 font-semibold text-xs leading-tight text-red-700 bg-red-100 rounded-full">Tidak
-                                                Aktif</span>
+                                <td><span class="fw-medium">{{ $account->bank_name }}</span></td>
+                                <td>{{ $account->account_number }}</td>
+                                <td>{{ $account->account_name }}</td>
+                                <td>{{ $account->start_date->format('d M Y') }}</td>
+                                <td>
+                                    @if ($account->is_active)
+                                        <span class="badge rounded-pill bg-label-success">Aktif</span>
+                                    @else
+                                        <span class="badge rounded-pill bg-label-secondary">Tidak Aktif</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <a class="btn btn-sm btn-icon"
+                                            href="{{ route('admin.blud-bank-accounts.edit', $account->id) }}"
+                                            data-bs-toggle="tooltip" title="Edit Rekening">
+                                            <i class="icon-base ri ri-pencil-line icon-22px"></i>
+                                        </a>
+                                        {{-- ✅ PERUBAHAN: Tombol hapus hanya muncul jika rekening tidak aktif --}}
+                                        @if (!$account->is_active)
+                                            <form action="{{ route('admin.blud-bank-accounts.destroy', $account->id) }}"
+                                                method="POST" class="form-delete">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
+                                                    title="Hapus Rekening">
+                                                    <i class="icon-base ri ri-delete-bin-line icon-22px"></i>
+                                                </button>
+                                            </form>
                                         @endif
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <a href="{{ route('admin.blud-bank-accounts.edit', $account->id) }}"
-                                            class="font-medium text-primary-600 hover:underline">Edit</a>
-                                        <form action="{{ route('admin.blud-bank-accounts.destroy', $account->id) }}"
-                                            method="POST" class="inline-block"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus rekening ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                class="font-medium text-red-600 hover:underline ms-3">Hapus</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr class="bg-white border-b">
-                                    <td colspan="6" class="px-6 py-4 text-center text-default-500">Tidak ada data
-                                        rekening.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                <div class="mt-6">
-                    {{ $accounts->links() }}
-                </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center">Tidak ada data rekening.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                {{ $accounts->links() }}
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Notifikasi Sukses
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
+            @endif
+
+            // Konfirmasi Hapus
+            document.querySelectorAll('.form-delete').forEach(form => {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    Swal.fire({
+                        title: 'Anda Yakin?',
+                        text: "Data rekening yang dihapus tidak dapat dikembalikan!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6f6b7d',
+                        confirmButtonText: 'Ya, Hapus!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    })
+                });
+            });
+        });
+    </script>
+@endpush

@@ -5,12 +5,25 @@
         <meta charset="utf-8">
         <title>Laporan Setoran - {{ $reportTitle }}</title>
         <style>
+            @font-face {
+                font-family: 'Bookman Old Style';
+                src: url('{{ storage_path(' fonts/bookmanoldstyle.ttf') }}') format('truetype');
+                font-weight: normal;
+                font-style: normal;
+            }
+
+            @font-face {
+                font-family: 'Bookman Old Style';
+                src: url('{{ storage_path(' fonts/bookmanoldstylebold.ttf') }}') format('truetype');
+                font-weight: bold;
+                font-style: normal;
+            }
+
             body {
-                font-family: 'Arial', sans-serif;
-                /* Menggunakan Arial */
+                font-family: 'Bookman Old Style', serif;
                 margin: 1cm;
                 padding: 0;
-                font-size: 10pt;
+                font-size: 9pt;
                 line-height: 1.5;
             }
 
