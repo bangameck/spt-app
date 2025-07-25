@@ -97,32 +97,27 @@
                         </a></li>
                 </ul>
             </li>
+            <li class="menu-item {{ request()->routeIs('admin.upt-profile.index') ? 'active' : '' }}">
+                <a href="{{ route('admin.upt-profile.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-building-4-line"></i>
+                    <div data-i18n="Profil UPT">Profil UPT</div>
+                </a>
+            </li>
             <li class="menu-item {{ request()->routeIs('admin.blud-bank-accounts.*') ? 'active' : '' }}">
                 <a href="{{ route('admin.blud-bank-accounts.index') }}" class="menu-link">
                     <i class="icon-base ri menu-icon tf-icons ri-bank-line"></i>
                     <div data-i18n="Rekening BLUD">Rekening BLUD</div>
                 </a>
             </li>
-        @endif
-        @if (Auth::user()->isAdmin() || Auth::user()->isStaffKeu())
-            <li class="menu-header small"><span class="menu-header-text">Keuangan</span></li>
-            <li class="menu-item {{ request()->routeIs('masterdata.deposit-transactions.*') ? 'active' : '' }}">
-                <a href="{{ route('masterdata.deposit-transactions.index') }}" class="menu-link">
-                    <i class="icon-base ri menu-icon tf-icons ri-money-dollar-circle-line"></i>
-                    <div data-i18n="Histori Perjanjian">Deposit</div>
-                </a>
-            </li>
-            <li class="menu-item {{ request()->routeIs('masterdata.deposit-reports.*') ? 'active' : '' }}">
-                <a href="{{ route('masterdata.deposit-reports.index') }}" class="menu-link">
-                    <i class="icon-base ri menu-icon tf-icons ri-exchange-dollar-fill"></i>
-                    <div data-i18n="Histori Perjanjian">Histori Deposit</div>
+            <li class="menu-item {{ request()->routeIs('admin.backup.*') ? 'active' : '' }}">
+                <a href="{{ route('admin.backup.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-database-2-line"></i>
+                    <div data-i18n="Backup Database">Backup Database</div>
                 </a>
             </li>
         @endif
-
-
         @if (Auth::user()->isAdmin() || Auth::user()->isStaffPks())
-            <li class="menu-header small"><span class="menu-header-text">Master Data & Kontrak</span></li>
+            <li class="menu-header small"><span class="menu-header-text">Lokasi Parkir & Perjanjian PKS</span></li>
             <li
                 class="menu-item {{ request()->routeIs('masterdata.road-sections.*') || request()->routeIs('masterdata.parking-locations.*') ? 'active open' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
@@ -156,10 +151,29 @@
                 </a>
             </li>
         @endif
-
+        @if (Auth::user()->isAdmin() || Auth::user()->isStaffKeu())
+            <li class="menu-header small"><span class="menu-header-text">Keuangan</span></li>
+            <li class="menu-item {{ request()->routeIs('masterdata.deposit-transactions.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.deposit-transactions.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-money-dollar-circle-line"></i>
+                    <div data-i18n="Histori Perjanjian">Deposit</div>
+                </a>
+            </li>
+            <li class="menu-item {{ request()->routeIs('masterdata.deposit-reports.*') ? 'active' : '' }}">
+                <a href="{{ route('masterdata.deposit-reports.index') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-exchange-dollar-fill"></i>
+                    <div data-i18n="Histori Perjanjian">Histori Deposit</div>
+                </a>
+            </li>
+        @endif
         <li class="menu-header small"><span class="menu-header-text">System</span></li>
+        <li class="menu-item {{ request()->routeIs('profile.settings') ? 'active' : '' }}">
+            <a href="{{ route('profile.settings') }}" class="menu-link">
+                <i class="icon-base ri menu-icon tf-icons ri-settings-2-line"></i>
+                <div data-i18n="Histori Perjanjian">Setting Profil</div>
+            </a>
+        </li>
         <li class="menu-item">
-
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <a href="{{ route('logout') }}" class="menu-link"

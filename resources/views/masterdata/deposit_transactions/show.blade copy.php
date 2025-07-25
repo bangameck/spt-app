@@ -2,14 +2,9 @@
 
 @section('title', 'Detail Transaksi Setoran')
 
-@push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.css') }}" />
-@endpush
-
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row invoice-preview">
-            <!-- Invoice -->
             <div class="col-xl-9 col-md-8 col-12 mb-md-0 mb-6">
                 <div class="card invoice-preview-card p-sm-12 p-6">
                     <div class="card-body invoice-preview-header rounded-4 p-6"
@@ -17,18 +12,25 @@
                         <div
                             class="d-flex justify-content-between flex-xl-row flex-md-column flex-sm-row flex-column text-heading align-items-xl-center align-items-md-start align-items-sm-center flex-wrap gap-6">
                             <div>
-                                <div class="d-flex align-items-center mb-4">
-                                    <img src="{{ $uptProfile->logo ? asset($uptProfile->logo) : asset('assets/img/logo-spt.png') }}"
-                                        alt="Logo" height="40" class="me-3">
-                                    <div>
-                                        <h5 class="mb-0 fw-semibold">{{ $uptProfile->name }}</h5>
-                                        <p class="mb-0" style="font-size: 0.85rem;">{{ $uptProfile->address }}</p>
-                                    </div>
-                                </div>
+                                <table width="100%" style="page-break-inside: avoid;">
+                                    <tr>
+                                        <td width="45%" style="text-align: left;"><img
+                                                src="{{ asset('assets/img/logo-spt.png') }}" alt="Logo" height="32">
+                                            <span class="mb-0 app-brand-text fw-semibold">PKS App</span>
+                                        </td>
+                                        <td width="10%" style="text-align: center;"></td>
+                                        <td width="45%" style="text-align: right;">
+                                            <h5 class="mb-6 text-nowrap">BUKTI SETORAN #{{ $depositTransaction->id }}
+                                                <br><small>{{ $depositTransaction->referral_code }}</small>
+                                            </h5>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <p class="mb-1">{{ $uptProfile->name }}</p>
+                                <p class="mb-0">{{ $uptProfile->address }}</p>
                             </div>
-                            <div class="text-xl">
-                                <h5 class="mb-2 text-nowrap">BUKTI SETORAN</h5>
-                                <p class="mb-2">{{ $depositTransaction->referral_code }}</p>
+                            <div>
+                                {{-- <h5 class="mb-6 text-nowrap">BUKTI SETORAN #{{ $depositTransaction->id }}</h5> --}}
                                 <div class="mb-1">
                                     <span>Tanggal Setor:</span>
                                     <span
@@ -63,34 +65,26 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- ✅ PERUBAHAN UTAMA PADA TABEL INI --}}
-                    <div class="table-responsive border rounded-4">
+                    <div class="table-responsive border rounded-4 border-bottom-0">
                         <table class="table m-0">
-                            <thead class="table-light">
+                            <thead>
                                 <tr>
                                     <th>Item</th>
-                                    <th class="text-end">Setoran Harian</th>
-                                    <th class="text-center">Jumlah Hari</th>
-                                    <th class="text-end">Jumlah Dibayarkan</th>
+                                    <th>Deskripsi</th>
+                                    <th class="text-end">Jumlah</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="text-nowrap text-heading">Setoran Bulan {{ $monthName }}
-                                        {{ $year }}</td>
-                                    <td class="text-end">Rp
-                                        {{ number_format($depositTransaction->agreement->daily_deposit_amount, 0, ',', '.') }}
+                                    <td class="text-nowrap text-heading">Setoran Harian</td>
+                                    <td class="text-nowrap">Pembayaran untuk tanggal
+                                        {{ $depositTransaction->deposit_date->translatedFormat('d F Y') }}</td>
+                                    <td class="text-end">Rp {{ number_format($depositTransaction->amount, 0, ',', '.') }}
                                     </td>
-                                    <td class="text-center">{{ $daysInMonth }} Hari</td>
-                                    <td class="text-end fw-medium">Rp
-                                        {{ number_format($depositTransaction->amount, 0, ',', '.') }}</td>
                                 </tr>
-
                             </tbody>
                         </table>
                     </div>
-
                     <div class="table-responsive">
                         <table class="table m-0 table-borderless">
                             <tbody>
@@ -111,25 +105,24 @@
                         </table>
                     </div>
 
+                    {{-- ✅ Bagian Bukti Transfer --}}
                     @if ($depositTransaction->proof_of_transfer)
-                        <hr class="mt-6 mb-6" />
+                        <hr class="mt-0 mb-6" />
                         <div class="card-body p-0">
                             <h6 class="mb-4">Bukti Transfer:</h6>
                             <a href="{{ asset($depositTransaction->proof_of_transfer) }}" target="_blank">
                                 <img src="{{ asset($depositTransaction->proof_of_transfer) }}" alt="Bukti Transfer"
-                                    class="img-fluid rounded-3 border" style="max-width: 400px;">
+                                    class="img-fluid rounded-3 border">
                             </a>
                         </div>
                     @endif
                 </div>
             </div>
-            <!-- /Invoice -->
-
-            <!-- Invoice Actions -->
             <div class="col-xl-3 col-md-4 col-12 invoice-actions">
                 <div class="card">
                     <div class="card-body">
-                        @if (!$depositTransaction->is_validated && Auth::user()->isAdmin())
+                        {{-- Tombol Validasi --}}
+                        @if (!$depositTransaction->is_validated && (Auth::user()->isAdmin() || Auth::user()->isLeader()))
                             <form action="{{ route('masterdata.deposit-transactions.validate', $depositTransaction->id) }}"
                                 method="POST" class="form-validate">
                                 @csrf
@@ -141,24 +134,22 @@
                             </form>
                         @endif
 
+                        {{-- ✅ TOMBOL CETAK DITAMBAHKAN DI SINI --}}
                         <a href="{{ route('masterdata.deposit-transactions.pdf', $depositTransaction->id) }}"
-                            target="_blank" class="btn btn-primary d-grid w-100 mb-4">
+                            target="_blank" class="btn btn-outline-primary d-grid w-100 mb-4">
                             <span class="d-flex align-items-center justify-content-center text-nowrap">
-                                <i class="icon-base ri ri-printer-line me-2"></i>Cetak Bukti
+                                <i class="icon-base ri ri-printer-line me-2"></i>Cetak Bukti Setor
                             </span>
                         </a>
 
-                        @if (!$depositTransaction->is_validated)
-                            <a href="{{ route('masterdata.deposit-transactions.edit', $depositTransaction->id) }}"
-                                class="btn btn-outline-secondary d-grid w-100 mb-4">Edit</a>
-                        @endif
-
+                        {{-- Tombol Edit & Kembali --}}
+                        <a href="{{ route('masterdata.deposit-transactions.edit', $depositTransaction->id) }}"
+                            class="btn btn-outline-secondary d-grid w-100 mb-4 {{ $depositTransaction->is_validated ? 'disabled' : '' }}">Edit</a>
                         <a href="{{ route('masterdata.deposit-transactions.index') }}"
                             class="btn btn-outline-secondary d-grid w-100">Kembali</a>
                     </div>
                 </div>
             </div>
-            <!-- /Invoice Actions -->
         </div>
     </div>
 @endsection
@@ -167,21 +158,19 @@
     <script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.js') }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Konfirmasi Validasi
             $('.form-validate').on('submit', function(event) {
                 event.preventDefault();
                 const form = this;
                 Swal.fire({
-                    title: 'Anda Yakin?',
-                    text: "Tindakan validasi ini tidak dapat dibatalkan.",
+                    title: 'Validasi Setoran Ini?',
+                    text: "Tindakan ini tidak dapat dibatalkan.",
                     icon: 'question',
                     showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6f6b7d',
                     confirmButtonText: 'Ya, Validasi!',
-                    cancelButtonText: 'Batal',
-                    customClass: {
-                        confirmButton: 'btn btn-success me-3',
-                        cancelButton: 'btn btn-outline-secondary'
-                    },
-                    buttonsStyling: false
+                    cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         form.submit();

@@ -17,13 +17,23 @@
 
 <script>
     window.addEventListener('load', function() {
-        if (window.performance) {
-            let loadTime = (window.performance.timing.loadEventEnd - window.performance.timing
-                .navigationStart) / 1000;
-            let loadTimeElement = document.getElementById('page-load-time');
-            if (loadTimeElement) {
-                loadTimeElement.textContent = loadTime.toFixed(3) + 's';
-            }
+        const loadTimeElement = document.getElementById('page-load-time');
+
+        // Ambil waktu sekarang relatif terhadap time origin
+        const now = performance.now();
+        const loadTime = now; // karena now - 0 (start time) = now
+
+        let displayTime;
+        if (loadTime >= 1000) {
+            displayTime = (loadTime / 1000).toFixed(2) + ' detik';
+        } else if (loadTime >= 1) {
+            displayTime = loadTime.toFixed(2) + ' milidetik';
+        } else {
+            displayTime = (loadTime * 1000).toFixed(2) + ' mikrodetik';
+        }
+
+        if (loadTimeElement) {
+            loadTimeElement.textContent = displayTime;
         }
     });
 </script>

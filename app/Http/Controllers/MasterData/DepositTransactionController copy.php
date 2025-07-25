@@ -5,7 +5,6 @@ namespace App\Http\Controllers\MasterData; // Namespace yang sudah kita sepakati
 use App\Http\Controllers\Controller;
 use App\Models\DepositTransaction;
 use App\Models\Agreement;
-use App\Models\UptProfile;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Str;
 
 class DepositTransactionController extends Controller
 {
@@ -45,7 +43,6 @@ class DepositTransactionController extends Controller
                 $q->where('deposit_date', 'like', '%' . $search . '%')
                     ->orWhere('amount', 'like', '%' . $search . '%')
                     ->orWhere('notes', 'like', '%' . $search . '%')
-                    ->orWhere('referral_code', 'like', '%' . $search . '%')
                     ->orWhereHas('agreement', function ($agreementQuery) use ($search) {
                         $agreementQuery->where('agreement_number', 'like', '%' . $search . '%')
                             ->orWhereHas('fieldCoordinator.user', function ($fcUserQuery) use ($search) {
@@ -118,40 +115,38 @@ class DepositTransactionController extends Controller
         Log::info('DepositTransactionController@store: Request received.', $request->all());
 
         $validatedData = $request->validate([
-            'agreement_id' => 'required|exists:agreements,id',
-            // Validasi tanggal diubah agar hanya menerima hari ini atau sesudahnya
-            'deposit_date' => 'required|date|after_or_equal:today',
+            'agreement_id' => [
+                'required',
+                'exists:agreements,id',
+                Rule::exists('agreements', 'id')->where('status', 'active'),
+                Rule::unique('deposit_transactions')->where(function ($query) use ($request) {
+                    return $query->where('deposit_date', $request->deposit_date);
+                }),
+            ],
+            'deposit_date' => 'required|date',
             'amount' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:255',
+            // Tambahkan validasi untuk bukti transfer
             'proof_of_transfer' => 'nullable|image|mimes:jpeg,png,jpg|max:300', // Maks 300KB
         ]);
 
         Log::info('DepositTransactionController@store: Validation successful.', $validatedData);
 
-        try {
-            $transactionData = Arr::except($validatedData, ['proof_of_transfer']);
-            $transactionData['created_by_user_id'] = Auth::id();
-            $transactionData['is_validated'] = false;
+        $transactionData = Arr::except($validatedData, ['proof_of_transfer']);
+        $transactionData['created_by_user_id'] = Auth::id();
+        $transactionData['is_validated'] = false;
 
-            // ✅ Hasilkan kode referensi unik yang aman di sisi server
-            $transactionData['referral_code'] = 'TRXPRK-' . now()->format('YmdHis') . '-' . strtoupper(Str::random(6));
-
-            if ($request->hasFile('proof_of_transfer')) {
-                $imageName = time() . '_proof.' . $request->proof_of_transfer->extension();
-                $request->proof_of_transfer->move(public_path('uploads/proofs'), $imageName);
-                $transactionData['proof_of_transfer'] = 'uploads/proofs/' . $imageName;
-            }
-
-            DepositTransaction::create($transactionData);
-
-            return redirect()->route('masterdata.deposit-transactions.index')
-                ->with('success', 'Setoran berhasil dicatat!');
-        } catch (\Exception $e) {
-            Log::error('Gagal menyimpan setoran: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.')
-                ->withInput();
+        // ✅ Logika untuk handle file upload
+        if ($request->hasFile('proof_of_transfer')) {
+            $imageName = time() . '_proof.' . $request->proof_of_transfer->extension();
+            $request->proof_of_transfer->move(public_path('uploads/proofs'), $imageName);
+            $transactionData['proof_of_transfer'] = 'uploads/proofs/' . $imageName;
         }
+
+        DepositTransaction::create($transactionData);
+
+        return redirect()->route('masterdata.deposit-transactions.index')
+            ->with('success', 'Setoran berhasil dicatat!');
     }
 
     /**
@@ -159,26 +154,15 @@ class DepositTransactionController extends Controller
      */
     public function show(DepositTransaction $depositTransaction)
     {
-        $depositTransaction->load(['agreement.fieldCoordinator.user', 'agreement.leader.user', 'creator']);
-        $uptProfile = UptProfile::firstOrFail();
+        // Eager load semua relasi yang dibutuhkan untuk halaman detail
+        $depositTransaction->load([
+            'agreement.fieldCoordinator.user',
+            'agreement.leader.user',
+            'creator'
+        ]);
 
-        // ✅ LOGIKA BARU: Hitung detail bulan berdasarkan tanggal setoran
-
-        $depositDate = Carbon::parse($depositTransaction->deposit_date)->addMonth(); // Menggunakan Carbon karena sudah di-cast di model
-
-        $daysInMonth = $depositDate->daysInMonth;
-        $monthName = $depositDate->translatedFormat('F');
-        $year = $depositDate->year;
-
-        return view('masterdata.deposit_transactions.show', compact(
-            'depositTransaction',
-            'uptProfile',
-            'daysInMonth',
-            'monthName',
-            'year'
-        ));
+        return view('masterdata.deposit_transactions.show', compact('depositTransaction'));
     }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -295,7 +279,6 @@ class DepositTransactionController extends Controller
             $results[] = [
                 'id' => $agreement->id,
                 'text' => $text,
-                'daily_deposit_amount' => $agreement->daily_deposit_amount // <-- Data ini sudah diambil
             ];
         }
 
@@ -306,51 +289,12 @@ class DepositTransactionController extends Controller
     public function generatePdf(DepositTransaction $depositTransaction)
     {
         // Eager load semua relasi yang dibutuhkan
-        // $depositTransaction->load(['agreement.fieldCoordinator.user', 'creator']);
-        $depositTransaction->load(['agreement.fieldCoordinator.user', 'agreement.leader.user', 'creator']);
-        $uptProfile = UptProfile::firstOrFail();
-
-        // ✅ LOGIKA BARU: Hitung detail bulan berdasarkan tanggal setoran
-        $depositDate = Carbon::parse($depositTransaction->deposit_date)->addMonth();
-
-        $daysInMonth = $depositDate->daysInMonth;
-        $monthName = $depositDate->translatedFormat('F');
-        $year = $depositDate->year;
-
+        $depositTransaction->load(['agreement.fieldCoordinator.user', 'creator']);
 
         // Generate PDF
-        $pdf = Pdf::loadView('pdf.deposit_receipt', compact(
-            'depositTransaction',
-            'uptProfile',
-            'daysInMonth',
-            'monthName',
-            'year'
-        ));
+        $pdf = Pdf::loadView('pdf.deposit_receipt', compact('depositTransaction'));
 
         // Tampilkan PDF di browser
-        return $pdf->stream('bukti_setor_' . $depositTransaction->referral_code . '.pdf');
-    }
-
-    public function checkExistingTransaction(Agreement $agreement)
-    {
-        $now = Carbon::now();
-
-        $existingTransaction = DepositTransaction::where('agreement_id', $agreement->id)
-            ->whereYear('created_at', $now->year)
-            ->whereMonth('created_at', $now->month)
-            ->first();
-
-        if ($existingTransaction) {
-            return response()->json([
-                'exists' => true,
-                'transaction' => [
-                    'agreement_number' => $agreement->agreement_number,
-                    'referral_code' => $existingTransaction->referral_code,
-                    'show_url' => route('masterdata.deposit-transactions.show', $existingTransaction->id)
-                ]
-            ]);
-        }
-
-        return response()->json(['exists' => false]);
+        return $pdf->stream('bukti_setor_' . $depositTransaction->id . '.pdf');
     }
 }

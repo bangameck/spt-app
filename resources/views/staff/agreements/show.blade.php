@@ -168,15 +168,18 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-12 order-2 mt-6">
-                <div class="card">
-                    <h5 class="card-header">Timeline Riwayat Perjanjian</h5>
-                    <div class="card-body">
-                        <ul class="timeline timeline-center">
-                            @forelse ($agreement->histories as $history)
-                                <li class="timeline-item">
+                <div class="col-12 order-2 mt-6">
+                    <div class="card">
+                        <h5 class="card-header pb-4 border-bottom mb-12">Timeline Riwayat Perjanjian</h5>
+                        <div class="card-body">
+                            <ul class="timeline timeline-center">
+                                {{-- Urutkan data dari yang terbaru ke terlama --}}
+                                @forelse ($agreement->histories->sortByDesc('created_at') as $history)
                                     @php
+                                        // Menentukan posisi event (kiri/kanan) secara bergantian
+                                        $positionClass = $loop->odd ? 'timeline-item-left' : 'timeline-item-right';
+
+                                        // Menentukan ikon dan warna berdasarkan tipe event
                                         $icon = 'ri-file-text-line';
                                         $color = 'secondary';
                                         switch ($history->event_type) {
@@ -189,8 +192,8 @@
                                                 $color = 'success';
                                                 break;
                                             case 'location_removed':
-                                                $icon = 'ri-map-pin-user-line';
-                                                $color = 'warning';
+                                                $icon = 'ri-map-pin-5-line';
+                                                $color = 'danger';
                                                 break;
                                             case 'deposit_changed':
                                                 $icon = 'ri-money-dollar-circle-line';
@@ -207,33 +210,49 @@
                                                 break;
                                         }
                                     @endphp
-                                    <span class="timeline-indicator timeline-indicator-{{ $color }}"><i
-                                            class="icon-base {{ $icon }}"></i></span>
-                                    <div class="timeline-event card p-0">
-                                        <div
-                                            class="card-header d-flex justify-content-between align-items-center flex-wrap">
-                                            <h6 class="card-title mb-0">{{ $history->notes }}</h6><small
-                                                class="text-muted">{{ $history->created_at->diffForHumans() }}</small>
+                                    <li class="timeline-item {{ $positionClass }}">
+                                        <span class="timeline-indicator timeline-indicator-{{ $color }}">
+                                            <i class="icon-base ri {{ $icon }}"></i>
+                                        </span>
+                                        <div class="timeline-event card p-0">
+                                            <div
+                                                class="card-header d-flex justify-content-between align-items-center flex-wrap">
+                                                <h6 class="card-title mb-0">{{ $history->notes }}</h6>
+                                                <div class="meta"><small
+                                                        class="text-muted">{{ $history->created_at->diffForHumans() }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="card-body py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-xs me-2">
+                                                        @if ($history->changer && $history->changer->img && file_exists(public_path($history->changer->img)))
+                                                            <img src="{{ asset($history->changer->img) }}" alt="Avatar"
+                                                                class="rounded-circle" />
+                                                        @else
+                                                            <span
+                                                                class="avatar-initial rounded-circle bg-label-secondary">{{ strtoupper(substr($history->changer->name ?? 'S', 0, 1)) }}</span>
+                                                        @endif
+                                                    </div>
+                                                    <span>Oleh: <span
+                                                            class="fw-medium">{{ $history->changer->name ?? 'Sistem' }}</span></span>
+                                                </div>
+                                            </div>
+                                            <div class="timeline-event-time">
+                                                {{ $history->created_at->translatedFormat('d M y, H:i') }}</div>
                                         </div>
-                                        <div class="card-body py-2">
-                                            <p class="mb-0 text-muted small">Oleh:
-                                                {{ $history->creator->name ?? 'Sistem' }}</p>
+                                    </li>
+                                @empty
+                                    <li class="timeline-item timeline-item-transparent">
+                                        <span class="timeline-indicator timeline-indicator-secondary"><i
+                                                class="icon-base ri-information-line"></i></span>
+                                        <div class="timeline-event">
+                                            <p class="text-center text-muted">Belum ada riwayat tercatat untuk perjanjian
+                                                ini.</p>
                                         </div>
-                                        <div class="timeline-event-time">
-                                            {{ $history->created_at->translatedFormat('d M Y, H:i') }}</div>
-                                    </div>
-                                </li>
-                            @empty
-                                <li class="timeline-item timeline-item-transparent">
-                                    <span class="timeline-indicator timeline-indicator-secondary"><i
-                                            class="icon-base ri-information-line"></i></span>
-                                    <div class="timeline-event">
-                                        <p class="text-center text-muted">Belum ada riwayat tercatat untuk perjanjian ini.
-                                        </p>
-                                    </div>
-                                </li>
-                            @endforelse
-                        </ul>
+                                    </li>
+                                @endforelse
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

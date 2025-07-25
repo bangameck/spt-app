@@ -430,19 +430,20 @@
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
+                                        {{-- ✅ PERBAIKAN UTAMA DI SINI --}}
                                         @if (Auth::user()->img && file_exists(public_path(Auth::user()->img)))
                                             <img src="{{ asset(Auth::user()->img) }}" alt="Avatar"
                                                 class="rounded-circle" />
                                         @else
-                                            <img src="{{ asset('assets/img/avatars/1.png') }}" alt
-                                                class="rounded-circle" />
+                                            <span
+                                                class="avatar-initial rounded-circle bg-label-secondary">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</span>
                                         @endif
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
                                     <span class="fw-medium d-block">{{ Auth::user()->name }}</span>
                                     <small
-                                        class="text-muted">{{ Auth::user()->role ? ucfirst(str_replace('_', ' ', Auth::user()->role)) : 'User' }}</small>
+                                        class="text-muted">{{ strtoupper(Auth::user()->role ? ucfirst(str_replace('_', ' ', Auth::user()->role)) : 'User') }}</small>
                                 </div>
                             </div>
                         </a>
@@ -457,7 +458,7 @@
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="pages-account-settings-account.html">
+                        <a class="dropdown-item" href="{{ route('profile.settings') }}">
                             <i class="icon-base ri ri-settings-4-line icon-22px me-3"></i><span
                                 class="align-middle">Settings</span>
                         </a>

@@ -11,6 +11,7 @@ use App\Models\ParkingLocation;
 use App\Models\RoadSection;
 use App\Models\AgreementHistory;
 use App\Models\BludBankAccount;
+use App\Models\UptProfile;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Log;
@@ -24,6 +25,7 @@ class AgreementController extends Controller
     /**
      * Menampilkan daftar perjanjian.
      */
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -142,7 +144,7 @@ class AgreementController extends Controller
     public function show(Agreement $agreement)
     {
         // Memuat semua relasi yang dibutuhkan
-        $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection', 'depositTransactions', 'histories']);
+        $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection', 'depositTransactions', 'histories.changer']);
 
         // Menghitung total setoran HANYA untuk tahun berjalan
         $totalDepositThisYear = $agreement->depositTransactions
@@ -354,10 +356,12 @@ class AgreementController extends Controller
     {
         // Ambil rekening bank yang sedang aktif
         $activeBankAccount = BludBankAccount::where('is_active', true)->first();
+        //
+        $uptProfile = UptProfile::first();
 
         $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection']);
 
-        $pdf = Pdf::loadView('pdf.agreement', compact('agreement', 'activeBankAccount'));
+        $pdf = Pdf::loadView('pdf.agreement', compact('agreement', 'activeBankAccount', 'uptProfile'));
         return $pdf->stream(str_replace('/', '_', $agreement->agreement_number) . '_' . date('dmY', strtotime($agreement->start_date)) . '-' . date('dmy', strtotime($agreement->end_date)) . '.pdf');
     }
 }

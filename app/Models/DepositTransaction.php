@@ -11,6 +11,7 @@ class DepositTransaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'referral_code', // <-- TAMBAHKAN INI
         'agreement_id',
         'deposit_date',
         'amount',

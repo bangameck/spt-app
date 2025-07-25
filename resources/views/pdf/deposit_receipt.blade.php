@@ -92,13 +92,14 @@
         <div class="container">
             <div class="header">
                 <h3>BUKTI SETORAN DANA</h3>
-                <p>UPT Perparkiran Dinas Perhubungan Kota Pekanbaru</p>
+                <p>{{ $uptProfile->name }}</p>
+                <p>{{ $uptProfile->address }}</p>
             </div>
             <hr>
             <table class="details-table">
                 <tr>
-                    <td>ID Transaksi</td>
-                    <td>: #{{ $depositTransaction->id }}</td>
+                    <td>Referensi</td>
+                    <td>: {{ $depositTransaction->referral_code }}</td>
                 </tr>
                 <tr>
                     <td>Tanggal Setor</td>
@@ -113,6 +114,15 @@
                     <td>: {{ $depositTransaction->agreement->fieldCoordinator->user->name ?? 'N/A' }}</td>
                 </tr>
                 <tr>
+                    <td>Jumlah Setoran / Hari</td>
+                    <td>: Rp. {{ number_format($depositTransaction->agreement->daily_deposit_amount, 0, ',', '.') }},-
+                    </td>
+                </tr>
+                <tr>
+                    <td>Jumlah Hari bln. {{ $monthName . ' ' . $year }}</td>
+                    <td>: {{ $daysInMonth }} Hari</td>
+                </tr>
+                <tr>
                     <td>Dicatat Oleh</td>
                     <td>: {{ $depositTransaction->creator->name ?? 'Sistem' }}</td>
                 </tr>
@@ -124,7 +134,7 @@
                     <tr>
                         <td>Tanggal Validasi</td>
                         <td>:
-                            {{ $depositTransaction->validation_date ? $depositTransaction->validation_date->translatedFormat('d F Y, H:i') : '-' }}
+                            {{ $depositTransaction->validation_date ? $depositTransaction->validation_date->locale('id')->translatedFormat('d F Y, H:i') : '-' }}
                         </td>
                     </tr>
                 @endif
@@ -139,7 +149,7 @@
 
             <div class="total-section">
                 <p>Jumlah Yang Dibayarkan:</p>
-                <h4>Rp {{ number_format($depositTransaction->amount, 0, ',', '.') }}</h4>
+                <h4>Rp {{ number_format($depositTransaction->amount, 0, ',', '.') }},-</h4>
             </div>
         </div>
     </body>

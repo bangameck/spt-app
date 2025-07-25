@@ -41,6 +41,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::resource('field-coordinators', FieldCoordinatorController::class);
             // ✅ TAMBAHKAN BARIS INI
             Route::resource('blud-bank-accounts', BludBankAccountController::class);
+            // ✅ DENGAN ROUTE BARU YANG LEBIH LENGKAP:
+            Route::get('backup', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('backup.index');
+            Route::post('backup', [\App\Http\Controllers\Admin\BackupController::class, 'store'])->name('backup.store');
+            Route::get('backup/{backup}/download', [\App\Http\Controllers\Admin\BackupController::class, 'download'])->name('backup.download');
+            Route::delete('backup/{backup}', [\App\Http\Controllers\Admin\BackupController::class, 'destroy'])->name('backup.destroy');
+            // ✅ TAMBAHKAN DUA ROUTE BARU INI UNTUK PROFIL UPT
+            Route::get('upt-profile', [\App\Http\Controllers\Admin\UptProfileController::class, 'index'])->name('upt-profile.index');
+            Route::post('upt-profile', [\App\Http\Controllers\Admin\UptProfileController::class, 'update'])->name('upt-profile.update');
         });
 
     // LEADER ROUTES
@@ -134,11 +142,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route untuk validasi setoran (bisa diakses Admin/Leader)
         Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
             ->name('deposit-transactions.validate');
+
+        Route::get('check-transaction/{agreement}', [DepositTransactionController::class, 'checkExistingTransaction'])
+            ->name('check-existing-transaction');
     });
     // End Role Admin, Staff Keu
 
     // Rute dashboard default jika tidak cocok dengan role spesifik
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/profile/settings', [\App\Http\Controllers\ProfileSettingController::class, 'edit'])->name('profile.settings');
+    Route::patch('/profile/settings', [\App\Http\Controllers\ProfileSettingController::class, 'updateProfile'])->name('profile.update.custom');
+    Route::put('/password/settings', [\App\Http\Controllers\ProfileSettingController::class, 'updatePassword'])->name('password.update.custom');
 });
 
 require __DIR__ . '/auth.php';

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\Admin\UptProfileController;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -19,6 +20,7 @@ class Agreement extends Model
         'daily_deposit_amount',
         'monthly_deposit_target', // ✅ TAMBAHKAN INI
         'total_deposit_target',   // ✅ TAMBAHKAN INI
+        'changed_by_user_id',
         'status',
         'signed_date',
     ];
@@ -86,5 +88,10 @@ class Agreement extends Model
     public function histories()
     {
         return $this->hasMany(AgreementHistory::class);
+    }
+
+    public function changer()
+    {
+        return $this->belongsTo(User::class, 'changed_by_user_id');
     }
 }
