@@ -65,7 +65,7 @@
 
         @if($errors->any())
         <div class="alert alert-danger mb-4" role="alert">
-            Email atau Password yang Anda masukkan salah.
+            Username atau Password yang Anda masukkan salah.
         </div>
         @endif
 
@@ -73,15 +73,15 @@
             @csrf
             <div class="form-floating form-floating-outline mb-5">
                 <input
-                    type="email"
-                    class="form-control @error('email') is-invalid @enderror"
-                    id="email"
-                    name="email"
-                    placeholder="Masukkan email Anda"
-                    value="{{ old('email') }}"
+                    type="username"
+                    class="form-control @error('username') is-invalid @enderror"
+                    id="username"
+                    name="username"
+                    placeholder="Masukkan username Anda"
+                    value="{{ old('username') }}"
                     required
                     autofocus />
-                <label for="email">Email</label>
+                <label for="username">Username</label>
             </div>
             <div class="mb-5">
                 <div class="form-password-toggle">

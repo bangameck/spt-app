@@ -17,6 +17,8 @@ class Agreement extends Model
         'start_date',
         'end_date',
         'daily_deposit_amount',
+        'monthly_deposit_target', // ✅ TAMBAHKAN INI
+        'total_deposit_target',   // ✅ TAMBAHKAN INI
         'status',
         'signed_date',
     ];

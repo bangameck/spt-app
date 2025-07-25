@@ -56,16 +56,25 @@
 
     <div class="menu-inner-shadow"></div>
 
-    {{-- ... --}}
-    <ul class="menu-inner py-1">
-        <li class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-            <a href="{{ route('admin.dashboard') }}" class="menu-link">
-                <i class="icon-base ri menu-icon tf-icons ri-home-smile-line"></i>
-                <div data-i18n="Dashboard">Dashboard</div>
-            </a>
-        </li>
+    {{-- ...user Admin --}}
+    <li class="menu-header small"><span class="menu-header-text">Dashboard</span></li>
 
+    <ul class="menu-inner py-1">
+        @if (Auth::user()->isStaffKeu() || Auth::user()->isStaffPks())
+            <li class="menu-item {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('staff.dashboard') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-home-smile-line"></i>
+                    <div data-i18n="Dashboard">Dashboard</div>
+                </a>
+            </li>
+        @endif
         @if (Auth::user()->isAdmin())
+            <li class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('admin.dashboard') }}" class="menu-link">
+                    <i class="icon-base ri menu-icon tf-icons ri-home-smile-line"></i>
+                    <div data-i18n="Dashboard">Dashboard</div>
+                </a>
+            </li>
             <li class="menu-header small"><span class="menu-header-text">Administrasi</span></li>
             <li
                 class="menu-item {{ request()->routeIs('admin.users.*') || request()->routeIs('admin.leaders.*') || request()->routeIs('admin.field-coordinators.*') ? 'active open' : '' }}">
@@ -94,6 +103,9 @@
                     <div data-i18n="Rekening BLUD">Rekening BLUD</div>
                 </a>
             </li>
+        @endif
+        @if (Auth::user()->isAdmin() || Auth::user()->isStaffKeu())
+            <li class="menu-header small"><span class="menu-header-text">Keuangan</span></li>
             <li class="menu-item {{ request()->routeIs('masterdata.deposit-transactions.*') ? 'active' : '' }}">
                 <a href="{{ route('masterdata.deposit-transactions.index') }}" class="menu-link">
                     <i class="icon-base ri menu-icon tf-icons ri-money-dollar-circle-line"></i>
@@ -108,9 +120,9 @@
             </li>
         @endif
 
-        <li class="menu-header small"><span class="menu-header-text">Master Data & Kontrak</span></li>
 
-        @if (Auth::user()->isAdmin() || Auth::user()->isStaff())
+        @if (Auth::user()->isAdmin() || Auth::user()->isStaffPks())
+            <li class="menu-header small"><span class="menu-header-text">Master Data & Kontrak</span></li>
             <li
                 class="menu-item {{ request()->routeIs('masterdata.road-sections.*') || request()->routeIs('masterdata.parking-locations.*') ? 'active open' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">

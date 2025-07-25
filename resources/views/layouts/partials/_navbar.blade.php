@@ -419,8 +419,8 @@
                         @if (Auth::user()->img && file_exists(public_path(Auth::user()->img)))
                             <img src="{{ asset(Auth::user()->img) }}" alt="Avatar" class="rounded-circle" />
                         @else
-                            <img src="{{ asset('assets/img/avatars/1.png') }}" alt="Avatar"
-                                class="rounded-circle" />
+                            <span
+                                class="avatar-initial rounded-circle bg-label-secondary">{{ strtoupper(substr(Auth::user()->name, 0, 2)) }}</span>
                         @endif
                     </div>
                 </a>

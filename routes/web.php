@@ -42,7 +42,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // ✅ TAMBAHKAN BARIS INI
             Route::resource('blud-bank-accounts', BludBankAccountController::class);
         });
-    // --- END: Route Khusus Admin ---
 
     // LEADER ROUTES
     Route::middleware('role:leader')->group(function () {
@@ -57,13 +56,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // STAFF ROUTES
-    Route::middleware('role:staff')->group(function () {
+    Route::middleware('role:staff_keu,staff_pks')->group(function () {
         Route::get('/staff/dashboard', [DashboardController::class, 'staffDashboard'])->name('staff.dashboard');
         // Tambahkan rute staff lainnya di sini
     });
 
-    // START: ROUTES UNTUK ADMIN DAN STAFF (MasterData)
-    Route::middleware(['auth', 'role:admin,staff'])->prefix('masterdata')->name('masterdata.')->group(function () {
+    // START: ROUTES UNTUK ADMIN DAN STAFF PKS (MasterData)
+    Route::middleware(['auth', 'role:admin,staff_pks'])->prefix('masterdata')->name('masterdata.')->group(function () {
         // Routes untuk Manajemen Ruas Jalan
         Route::resource('road-sections', RoadSectionController::class);
 
@@ -91,6 +90,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route untuk validasi setoran (bisa diakses Admin/Leader)
         Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
             ->name('deposit-transactions.validate');
+        // START: Route AJAX untuk pencarian perjanjian aktif (untuk Select2)
+        Route::get('search-active-agreements', [DepositTransactionController::class, 'searchActiveAgreements'])
+            ->name('search-active-agreements');
+        // END: Route AJAX untuk pencarian perjanjian aktif
+
+        // START: Route untuk Generate PDF Perjanjian (Ini yang ditambahkan/dipastikan ada)
+        Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'generatePdf'])->name('agreements.pdf');
+        // END: Route untuk Generate PDF Perjanjian
+
+        // START: Route untuk Riwayat Perjanjian
+        Route::get('agreement-histories', [AgreementHistoryController::class, 'index'])->name('agreement-histories.index');
+        // END: Route untuk Riwayat Perjanjian
+
+        // START: Route untuk Generate PDF Riwayat Perjanjian
+        Route::get('agreement-histories/{history}/pdf', [AgreementHistoryController::class, 'generatePdf'])->name('agreement-histories.pdf');
+        // END: Route untuk Generate PDF Riwayat Perjanjian
+
+
+    });
+    // END: ROUTES BARU UNTUK ADMIN DAN STAFF (MasterData)
+
+    //Role Admin, Staff Keuangan
+    Route::middleware(['auth', 'role:admin,staff_keu'])->prefix('masterdata')->name('masterdata.')->group(function () {
 
         // ✅ TAMBAHKAN ROUTE BARU INI
         Route::get('deposit-transactions/{depositTransaction}/pdf', [DepositTransactionController::class, 'generatePdf'])
@@ -112,27 +134,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route untuk validasi setoran (bisa diakses Admin/Leader)
         Route::post('deposit-transactions/{depositTransaction}/validate', [DepositTransactionController::class, 'validateDeposit'])
             ->name('deposit-transactions.validate');
-
-        // START: Route AJAX untuk pencarian perjanjian aktif (untuk Select2)
-        Route::get('search-active-agreements', [DepositTransactionController::class, 'searchActiveAgreements'])
-            ->name('search-active-agreements');
-        // END: Route AJAX untuk pencarian perjanjian aktif
-
-        // START: Route untuk Generate PDF Perjanjian (Ini yang ditambahkan/dipastikan ada)
-        Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'generatePdf'])->name('agreements.pdf');
-        // END: Route untuk Generate PDF Perjanjian
-
-        // START: Route untuk Riwayat Perjanjian
-        Route::get('agreement-histories', [AgreementHistoryController::class, 'index'])->name('agreement-histories.index');
-        // END: Route untuk Riwayat Perjanjian
-
-        // START: Route untuk Generate PDF Riwayat Perjanjian
-        Route::get('agreement-histories/{history}/pdf', [AgreementHistoryController::class, 'generatePdf'])->name('agreement-histories.pdf');
-        // END: Route untuk Generate PDF Riwayat Perjanjian
-
-
     });
-    // END: ROUTES BARU UNTUK ADMIN DAN STAFF (MasterData)
+    // End Role Admin, Staff Keu
 
     // Rute dashboard default jika tidak cocok dengan role spesifik
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

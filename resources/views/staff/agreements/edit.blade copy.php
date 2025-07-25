@@ -3,214 +3,235 @@
 @section('title', 'Edit Perjanjian: ' . $agreement->agreement_number)
 
 @push('styles')
-    {{-- Tambahkan CSS untuk Select2 jika belum ada di layout utama --}}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/select2/select2.css') }}" />
 @endpush
 
 @section('content')
-    <div class="container-fluid">
-        <div class="flex justify-between items-center mb-6">
-            <h4 class="text-default-900 text-2xl font-bold">Edit Perjanjian: {{ $agreement->agreement_number }}</h4>
-            <a href="{{ route('masterdata.agreements.index') }}"
-                class="px-6 py-2 rounded-md text-primary-600 border border-primary-600 hover:bg-primary-600 hover:text-white transition-all">
-                Kembali ke Daftar
-            </a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Edit Perjanjian</h4>
+        <div class="d-flex align-items-center">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb breadcrumb-style1 mb-0">
+                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Master Data</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('masterdata.agreements.index') }}">PKS</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
         </div>
+    </div>
 
-        {{-- Menampilkan Pesan Error Validasi --}}
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                <strong class="font-bold">Oops! Terjadi Kesalahan.</strong>
-                <ul class="mt-2 list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @if ($errors->any())
+        <div class="alert alert-danger" role="alert">
+            <p class="mb-0"><strong>Oops! Terjadi beberapa kesalahan:</strong></p>
+            <ul class="mt-2 mb-0 ps-3">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <div class="card bg-white shadow rounded-lg p-6">
+    <div class="card">
+        <div class="card-body">
             <form action="{{ route('masterdata.agreements.update', $agreement->id) }}" method="POST">
                 @csrf
-                @method('PUT')
-
-                <h5 class="text-lg font-semibold text-default-800 mb-4">Detail Perjanjian</h5>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label for="agreement_number" class="block text-sm font-medium text-default-700 mb-2">Nomor
-                            Perjanjian</label>
-                        <input type="text" name="agreement_number" id="agreement_number" class="form-input w-full"
-                            value="{{ old('agreement_number', $agreement->agreement_number) }}" required>
+                @method('PATCH')
+                <div class="row g-6">
+                    {{-- Detail Perjanjian --}}
+                    <div class="col-12">
+                        <h5 class="mb-0">Informasi Perjanjian</h5>
+                        <hr class="mt-2">
                     </div>
-                    <div>
-                        <label for="leader_id" class="block text-sm font-medium text-default-700 mb-2">Pimpinan (PIHAK
-                            PERTAMA)</label>
-                        <select name="leader_id" id="leader_id" class="form-select w-full select2" required>
-                            <option value="">Pilih Pimpinan</option>
-                            @foreach ($leaders as $leader)
-                                <option value="{{ $leader->id }}"
-                                    {{ old('leader_id', $agreement->leader_id) == $leader->id ? 'selected' : '' }}>
-                                    {{ $leader->user->name ?? 'N/A' }} (NIP: {{ $leader->employee_number }})
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="text" class="form-control"
+                                id="agreement_number" name="agreement_number"
+                                value="{{ old('agreement_number', $agreement->agreement_number) }}" readonly /><label
+                                for="agreement_number">Nomor Perjanjian</label></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><select class="form-select select2" id="leader_id"
+                                name="leader_id" required>
+                                <option value=""></option>
+                                @foreach ($leaders as $leader)
+                                    <option value="{{ $leader->id }}"
+                                        {{ old('leader_id', $agreement->leader_id) == $leader->id ? 'selected' : '' }}>
+                                        {{ $leader->user->name ?? 'N/A' }}</option>
+                                @endforeach
+                            </select><label for="leader_id">Pimpinan (Pihak Pertama)</label></div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label">Koordinator Lapangan (Pihak Kedua)</label>
+                        <input type="text" class="form-control"
+                            value="{{ $agreement->fieldCoordinator->user->name ?? 'N/A' }}" disabled />
+                        <input type="hidden" name="field_coordinator_id" value="{{ $agreement->field_coordinator_id }}">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="date" class="form-control"
+                                id="start_date" name="start_date"
+                                value="{{ old('start_date', $agreement->start_date->format('Y-m-d')) }}" required /><label
+                                for="start_date">Tanggal Mulai</label></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="date" class="form-control"
+                                id="end_date" name="end_date"
+                                value="{{ old('end_date', $agreement->end_date->format('Y-m-d')) }}" required /><label
+                                for="end_date">Tanggal Akhir</label></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="date" class="form-control"
+                                id="signed_date" name="signed_date"
+                                value="{{ old('signed_date', $agreement->signed_date->format('Y-m-d')) }}"
+                                required /><label for="signed_date">Tanggal TTD</label></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating form-floating-outline"><input type="number" class="form-control"
+                                id="daily_deposit_amount" name="daily_deposit_amount"
+                                value="{{ old('daily_deposit_amount', $agreement->daily_deposit_amount) }}" min="0"
+                                required /><label for="daily_deposit_amount">Jumlah Setoran Harian (Rp)</label></div>
+                    </div>
+                    @php
+                        $endDate = \Carbon\Carbon::parse($agreement->end_date);
+                        $canChangeStatus = $endDate->isPast() || now()->diffInDays($endDate, false) <= 10;
+                    @endphp
+                    <div class="col-md-12">
+                        <div class="form-floating form-floating-outline">
+                            <select name="status" id="status" class="form-select" required
+                                {{ !$canChangeStatus ? 'disabled' : '' }}>
+                                <option value="active"
+                                    {{ old('status', $agreement->status) == 'active' ? 'selected' : '' }}>Aktif</option>
+                                <option value="pending_renewal"
+                                    {{ old('status', $agreement->status) == 'pending_renewal' ? 'selected' : '' }}>Menunggu
+                                    Perpanjangan</option>
+                                <option value="expired"
+                                    {{ old('status', $agreement->status) == 'expired' ? 'selected' : '' }}>Kadaluarsa
                                 </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label for="field_coordinator_id"
-                            class="block text-sm font-medium text-default-700 mb-2">Koordinator Lapangan (PIHAK
-                            KEDUA)</label>
-                        <select name="field_coordinator_id" id="field_coordinator_id" class="form-select w-full select2"
-                            required>
-                            <option value="">Pilih Koordinator Lapangan</option>
-                            @foreach ($fieldCoordinators as $fc)
-                                <option value="{{ $fc->id }}"
-                                    {{ old('field_coordinator_id', $agreement->field_coordinator_id) == $fc->id ? 'selected' : '' }}>
-                                    {{ $fc->user->name ?? 'N/A' }} (No. KTP: {{ $fc->id_card_number }})
+                                <option value="terminated"
+                                    {{ old('status', $agreement->status) == 'terminated' ? 'selected' : '' }}>Diakhiri
                                 </option>
-                            @endforeach
+                            </select><label for="status">Status Perjanjian</label>
+                        </div>
+                        @if (!$canChangeStatus)
+                            <input type="hidden" name="status" value="{{ $agreement->status }}">
+                            <small class="text-danger small">Status hanya bisa diubah jika PKS akan berakhir dalam 10 hari
+                                atau sudah kadaluarsa.</small>
+                        @endif
+                    </div>
+
+                    {{-- Pilihan Zona dan Lokasi Parkir --}}
+                    <div class="col-12 mt-4">
+                        <h5 class="mb-0">Lokasi Parkir Terkait</h5>
+                        <hr class="mt-2">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Zona Pengelolaan</label>
+                        <div class="d-flex pt-2">
+                            <div class="form-check me-4">
+                                <input name="zone_filter" class="form-check-input" type="radio" value="Zona 2"
+                                    id="zone2" {{ $initialZone == 'Zona 2' ? 'checked' : '' }} disabled />
+                                <label class="form-check-label" for="zone2"> Zona 2 </label>
+                            </div>
+                            <div class="form-check">
+                                <input name="zone_filter" class="form-check-input" type="radio" value="Zona 3"
+                                    id="zone3" {{ $initialZone == 'Zona 3' ? 'checked' : '' }} disabled />
+                                <label class="form-check-label" for="zone3"> Zona 3 </label>
+                            </div>
+                        </div>
+                        <small class="text-muted">Zona tidak dapat diubah saat mengedit perjanjian.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="road_section_filter" class="form-label">Filter Ruas Jalan</label>
+                        <select class="form-select select2" id="road_section_filter" name="road_section_id_filter">
+                            <option value="">Tampilkan Semua Lokasi</option>
+                            {{-- Filter ini akan di-handle oleh JavaScript --}}
                         </select>
                     </div>
-                    <div>
-                        <label for="daily_deposit_amount" class="block text-sm font-medium text-default-700 mb-2">Jumlah
-                            Setoran Harian (Rp)</label>
-                        <input type="number" name="daily_deposit_amount" id="daily_deposit_amount"
-                            class="form-input w-full"
-                            value="{{ old('daily_deposit_amount', $agreement->daily_deposit_amount) }}" min="0"
-                            required>
-                    </div>
-                    <div>
-                        <label for="start_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Mulai
-                            Perjanjian</label>
-                        <input type="date" name="start_date" id="start_date" class="form-input w-full"
-                            value="{{ old('start_date', $agreement->start_date?->format('Y-m-d')) }}" required>
-                    </div>
-                    <div>
-                        <label for="end_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal Akhir
-                            Perjanjian</label>
-                        <input type="date" name="end_date" id="end_date" class="form-input w-full"
-                            value="{{ old('end_date', $agreement->end_date?->format('Y-m-d')) }}" required>
-                    </div>
-                    <div>
-                        <label for="signed_date" class="block text-sm font-medium text-default-700 mb-2">Tanggal
-                            Ditandatangani</label>
-                        <input type="date" name="signed_date" id="signed_date" class="form-input w-full"
-                            value="{{ old('signed_date', $agreement->signed_date?->format('Y-m-d')) }}" required>
-                    </div>
-                    <div>
-                        <label for="status" class="block text-sm font-medium text-default-700 mb-2">Status
-                            Perjanjian</label>
-                        <select name="status" id="status" class="form-select w-full" required>
-                            <option value="active" {{ old('status', $agreement->status) == 'active' ? 'selected' : '' }}>
-                                Aktif</option>
-                            <option value="expired" {{ old('status', $agreement->status) == 'expired' ? 'selected' : '' }}>
-                                Kadaluarsa</option>
-                            <option value="terminated"
-                                {{ old('status', $agreement->status) == 'terminated' ? 'selected' : '' }}>Diakhiri</option>
-                            <option value="pending_renewal"
-                                {{ old('status', $agreement->status) == 'pending_renewal' ? 'selected' : '' }}>Menunggu
-                                Perpanjangan</option>
-                        </select>
-                    </div>
-                </div>
-
-                <hr class="my-6 border-default-200">
-
-                <h5 class="text-lg font-semibold text-default-800 mb-4">Lokasi Parkir Terkait (Pilih Minimal 1)</h5>
-                <div class="mb-6">
-                    <div>
-                        <label for="road_section_filter" class="block text-sm font-medium text-default-700 mb-2">Filter
-                            Berdasarkan Ruas Jalan</label>
-                        <select id="road_section_filter" class="form-select w-full">
-                            <option value="">Tampilkan Semua Ruas Jalan</option>
-                            @foreach ($roadSections as $rs)
-                                <option value="{{ $rs->id }}">{{ $rs->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-default-700 mb-2">Pilih Lokasi Parkir</label>
-                        <div id="parking_location_checkboxes"
-                            class="border border-default-200 rounded-md p-4 max-h-60 overflow-y-auto">
-                            @forelse ($availableParkingLocations as $location)
-                                <div class="flex items-center mb-2 checkbox-item">
-                                    <input type="checkbox" name="parking_location_ids[]"
-                                        id="parking_location_{{ $location->id }}" value="{{ $location->id }}"
-                                        data-road-section-id="{{ $location->road_section_id }}"
-                                        class="form-checkbox h-4 w-4 text-primary-600"
-                                        {{ in_array($location->id, old('parking_location_ids', $currentParkingLocationIds)) ? 'checked' : '' }}>
-                                    <label for="parking_location_{{ $location->id }}"
-                                        class="ml-2 text-sm text-default-800">
-                                        {{ $location->name }} ({{ $location->roadSection->name ?? 'N/A' }}) - Status:
-                                        {{ ucfirst(str_replace('_', ' ', $location->status)) }}
-
-                                    </label>
-                                </div>
-                            @empty
-                                <p class="text-default-500">Tidak ada lokasi parkir tersedia saat ini.</p>
-                            @endforelse
+                    <div class="col-12">
+                        <label class="form-label">Pilih Lokasi Parkir (Minimal 1)</label>
+                        <div id="parking-location-container" class="border rounded-3 p-4"
+                            style="min-height: 150px; max-height: 400px; overflow-y: auto;">
+                            {{-- ✅ Logika baru untuk menampilkan checkbox --}}
+                            @if ($parkingLocationsForCheckboxes->isEmpty())
+                                <p class="text-muted text-center">Tidak ada lokasi tersedia atau terikat pada zona ini.</p>
+                            @else
+                                @foreach ($parkingLocationsForCheckboxes->groupBy('road_section_id') as $roadSectionId => $locations)
+                                    <div class="mb-3 location-group" data-section-id="{{ $roadSectionId }}">
+                                        <p class="fw-medium mb-2">
+                                            {{ $locations->first()->roadSection->name ?? 'Lainnya' }}</p>
+                                        <div class="row">
+                                            @foreach ($locations as $location)
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="parking_location_ids[]" value="{{ $location->id }}"
+                                                            id="loc-{{ $location->id }}"
+                                                            {{ in_array($location->id, old('parking_location_ids', $currentParkingLocationIds)) ? 'checked' : '' }}>
+                                                        <label class="form-check-label"
+                                                            for="loc-{{ $location->id }}">{{ $location->name }}</label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
                         </div>
                         @error('parking_location_ids')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
-                    <button type="submit"
-                        class="px-6 py-2 rounded-md text-white bg-primary-600 hover:bg-primary-700 transition-all">
-                        Simpan Perubahan
-                    </button>
-                    <a href="{{ route('masterdata.agreements.index') }}"
-                        class="px-6 py-2 rounded-md text-default-600 border border-default-300 hover:bg-default-50 transition-all">
-                        Batal
-                    </a>
+                <div class="pt-6 text-end">
+                    <a href="{{ route('masterdata.agreements.index') }}" class="btn btn-outline-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
     </div>
 @endsection
 
-@push('scripts')
-    {{-- Tambahkan jQuery dan Select2 JS jika belum ada di layout utama --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+@push('vendors-js')
+    <script src="{{ asset('assets/vendor/libs/select2/select2.js') }}"></script>
+@endpush
 
+@push('scripts')
     <script>
-        $(document).ready(function() {
-            // Inisialisasi Select2 pada dropdown
-            $('.select2').select2({
-                placeholder: 'Pilih salah satu',
-                allowClear: true
+        document.addEventListener("DOMContentLoaded", function() {
+            // Inisialisasi Select2
+            $('.select2').each(function() {
+                $(this).wrap('<div class="position-relative"></div>').select2({
+                    placeholder: 'Pilih salah satu',
+                    dropdownParent: $(this).parent(),
+                    allowClear: true
+                });
             });
 
-            const roadSectionFilter = document.getElementById('road_section_filter');
-            const checkboxesContainer = document.getElementById('parking_location_checkboxes');
+            const roadSectionFilter = $('#road_section_filter');
+            const parkingContainer = $('#parking-location-container');
 
-            function filterParkingLocations() {
-                const selectedRoadSectionId = roadSectionFilter.value;
+            // ✅ Mengisi dropdown filter ruas jalan dari data yang sudah ada
+            const roadSectionsInZone = @json($parkingLocationsForCheckboxes->pluck('roadSection')->unique('id')->sortBy('name'));
 
-                $(checkboxesContainer).find('.checkbox-item').each(function() {
-                    const checkbox = $(this).find('input[type="checkbox"]');
-                    const itemRoadSectionId = checkbox.data('road-section-id').toString();
-                    const isChecked = checkbox.is(':checked');
+            roadSectionFilter.empty().append('<option value="">Tampilkan Semua Lokasi</option>');
+            roadSectionsInZone.forEach(section => {
+                if (section) { // Cek jika section tidak null
+                    roadSectionFilter.append($('<option></option>').attr('value', section.id).text(section
+                        .name));
+                }
+            });
 
-                    // Tampilkan item jika:
-                    // 1. Tidak ada filter yang dipilih, ATAU
-                    // 2. ID ruas jalan item cocok dengan filter, ATAU
-                    // 3. Item tersebut sudah dicentang (agar tidak hilang saat filter)
-                    if (!selectedRoadSectionId || itemRoadSectionId === selectedRoadSectionId ||
-                        isChecked) {
-                        $(this).show();
-                    } else {
-                        // Hanya sembunyikan, jangan disable
-                        $(this).hide();
-                    }
-                });
-            }
-
-            // Jalankan filter saat halaman dimuat dan saat filter diubah
-            filterParkingLocations();
-            $(roadSectionFilter).on('change', filterParkingLocations);
+            // Event listener untuk filter Ruas Jalan
+            roadSectionFilter.on('change', function() {
+                const selectedSectionId = $(this).val();
+                if (selectedSectionId) {
+                    // Sembunyikan semua grup, lalu tampilkan yang cocok
+                    parkingContainer.find('.location-group').hide();
+                    parkingContainer.find(`.location-group[data-section-id="${selectedSectionId}"]`).show();
+                } else {
+                    // Jika filter dikosongkan, tampilkan semua grup
+                    parkingContainer.find('.location-group').show();
+                }
+            });
         });
     </script>
 @endpush

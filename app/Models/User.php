@@ -80,9 +80,14 @@ class User extends Authenticatable
         return $this->role === 'field_coordinator';
     }
 
-    public function isStaff(): bool
+    public function isStaffKeu(): bool
     {
-        return $this->role === 'staff';
+        return $this->role === 'staff_keu';
+    }
+
+    public function isStaffPks(): bool
+    {
+        return $this->role === 'staff_pks';
     }
 
     // --- End: Metode Helper Role ---

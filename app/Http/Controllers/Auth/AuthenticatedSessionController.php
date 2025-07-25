@@ -38,7 +38,9 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended(route('leader.dashboard', absolute: false));
             case 'field_coordinator':
                 return redirect()->intended(route('field_coordinator.dashboard', absolute: false));
-            case 'staff':
+            case 'staff_pks':
+                return redirect()->intended(route('staff.dashboard', absolute: false));
+            case 'staff_keu':
                 return redirect()->intended(route('staff.dashboard', absolute: false));
             default:
                 // Fallback jika role tidak terdefinisi

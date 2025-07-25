@@ -22,7 +22,7 @@ class UserController extends Controller
         // Mulai query User
         $query = User::query();
 
-        $query->whereIn('role', ['admin', 'staff']);
+        $query->whereIn('role', ['admin', 'staff_keu', 'staff_pks']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -68,7 +68,7 @@ class UserController extends Controller
             'username' => 'required|string|max:255|unique:users,username|regex:/^[a-z0-9_-]+$/',
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed|not_regex:/\s/',
-            'role' => 'required|string|in:admin,leader,field_coordinator,staff', // Tambahkan validasi role
+            'role' => 'required|string|in:admin,leader,field_coordinator,staff_keu,staff_pks', // Tambahkan validasi role
             'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:300',
         ]);
 
@@ -145,7 +145,7 @@ class UserController extends Controller
                 Rule::unique('users', 'email')->ignore($user->id),
             ],
             'password' => 'nullable|string|min:8|confirmed|not_regex:/\s/',
-            'role' => 'required|string|in:admin,leader,field_coordinator,staff',
+            'role' => 'required|string|in:admin,leader,field_coordinator,staff_pks,staff_keu',
             'img' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:300',
         ]);
 

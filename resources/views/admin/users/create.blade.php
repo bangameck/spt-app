@@ -105,16 +105,23 @@
 
                             <div class="col-md-12">
                                 <label class="form-label">Role</label>
-                                <div class="d-flex pt-2">
+                                <div class="d-flex pt-3">
                                     <div class="form-check me-4">
                                         <input name="role" class="form-check-input" type="radio" value="admin"
                                             id="roleAdmin" {{ old('role') == 'admin' ? 'checked' : '' }} />
                                         <label class="form-check-label" for="roleAdmin"> Admin </label>
                                     </div>
                                     <div class="form-check">
-                                        <input name="role" class="form-check-input" type="radio" value="staff"
-                                            id="roleStaff" {{ old('role', 'staff') == 'staff' ? 'checked' : '' }} />
-                                        <label class="form-check-label" for="roleStaff"> Staff </label>
+                                        <input name="role" class="form-check-input" type="radio" value="staff_pks"
+                                            id="roleStaffPks"
+                                            {{ old('role', 'staff_pks') == 'staff_pks' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleStaffPks"> Staff PKS </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input name="role" class="form-check-input" type="radio" value="staff_keu"
+                                            id="roleStaffKeu"
+                                            {{ old('role', 'staff_keu') == 'staff_keu' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleStaffKeu"> Staff Keuangan</label>
                                     </div>
                                 </div>
                             </div>

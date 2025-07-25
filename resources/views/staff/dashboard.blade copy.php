@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Staff Dashboard')
+@section('title', 'Admin Dashboard')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('assets/vendor/libs/apex-charts/apex-charts.css') }}" />
@@ -106,8 +106,7 @@
                         <div class="card-body text-center">
                             <h5 class="text-sm font-medium text-default-600 mb-2">TOTAL SETORAN TAHUN INI</h5>
                             <p class="text-3xl font-bold text-default-900">Rp
-                                {{ number_format($currentYearValidatedDeposit, 0, ',', '.') }}
-                            </p>
+                                {{ number_format($currentYearValidatedDeposit, 0, ',', '.') }}</p>
                         </div>
                     </div>
                 </div>

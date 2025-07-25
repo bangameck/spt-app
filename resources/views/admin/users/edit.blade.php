@@ -104,9 +104,16 @@
                                         <label class="form-check-label" for="roleAdmin"> Admin </label>
                                     </div>
                                     <div class="form-check">
-                                        <input name="role" class="form-check-input" type="radio" value="staff"
-                                            id="roleStaff" {{ old('role', $user->role) == 'staff' ? 'checked' : '' }} />
-                                        <label class="form-check-label" for="roleStaff"> Staff </label>
+                                        <input name="role" class="form-check-input" type="radio" value="staff_pks"
+                                            id="roleStaffPks"
+                                            {{ old('role', $user->role) == 'staff_pks' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleStaffPks"> Staff PKS</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input name="role" class="form-check-input" type="radio" value="staff_keu"
+                                            id="roleStaffKeu"
+                                            {{ old('role', $user->role) == 'staff_ke' ? 'checked' : '' }} />
+                                        <label class="form-check-label" for="roleStaffKeu"> Staff Keuangan</label>
                                     </div>
                                 </div>
                             </div>

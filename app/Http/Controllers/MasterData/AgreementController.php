@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class AgreementController extends Controller
 {
@@ -102,10 +103,19 @@ class AgreementController extends Controller
             'parking_location_ids' => 'required|array|min:1', // Validasi minimal 1 lokasi
             'parking_location_ids.*' => 'exists:parking_locations,id',
         ]);
+        // ✅ Logika Kalkulasi
+        $dailyAmount = (float) $validatedData['daily_deposit_amount'];
+        $startDate = Carbon::parse($validatedData['start_date']);
+        $endDate = Carbon::parse($validatedData['end_date']);
+        $durationInDays = $endDate->diffInDays($startDate) + 1;
+
+        $agreementData = $validatedData;
+        $agreementData['monthly_deposit_target'] = $dailyAmount * 30; // Asumsi 30 hari/bulan
+        $agreementData['total_deposit_target'] = $dailyAmount * $durationInDays;
 
         DB::beginTransaction();
         try {
-            $agreement = Agreement::create($validatedData);
+            $agreement = Agreement::create($agreementData);
 
             $parkingLocationsToAttach = [];
             foreach ($validatedData['parking_location_ids'] as $locationId) {
@@ -178,7 +188,7 @@ class AgreementController extends Controller
         }
 
         // 4. Ambil semua ruas jalan untuk dropdown filter
-        $allRoadSections = RoadSection::orderBy('name')->get();
+        $allRoadSections = $initialZone ? RoadSection::where('zone', $initialZone)->orderBy('name')->get() : collect();
 
         return view('staff.agreements.edit', compact(
             'agreement',
@@ -208,10 +218,20 @@ class AgreementController extends Controller
             'parking_location_ids.*' => 'exists:parking_locations,id',
         ]);
 
+        // ✅ Logika Kalkulasi
+        $dailyAmount = (float) $validatedData['daily_deposit_amount'];
+        $startDate = Carbon::parse($validatedData['start_date']);
+        $endDate = Carbon::parse($validatedData['end_date']);
+        $durationInDays = $endDate->diffInDays($startDate) + 1;
+
+        $agreementData = $validatedData;
+        $agreementData['monthly_deposit_target'] = $dailyAmount * 30;
+        $agreementData['total_deposit_target'] = $dailyAmount * $durationInDays;
+
         DB::beginTransaction();
         try {
             $oldData = $agreement->fresh();
-            $agreement->update($validatedData);
+            $agreement->update($agreementData);
 
             $newLocationIds = $validatedData['parking_location_ids'] ?? [];
             $allRelatedLocations = $oldData->parkingLocations()->get()->keyBy('id');
@@ -338,6 +358,6 @@ class AgreementController extends Controller
         $agreement->load(['leader.user', 'fieldCoordinator.user', 'activeParkingLocations.roadSection']);
 
         $pdf = Pdf::loadView('pdf.agreement', compact('agreement', 'activeBankAccount'));
-        return $pdf->stream('PKS_' . $agreement->agreement_number . '.pdf');
+        return $pdf->stream(str_replace('/', '_', $agreement->agreement_number) . '_' . date('dmY', strtotime($agreement->start_date)) . '-' . date('dmy', strtotime($agreement->end_date)) . '.pdf');
     }
 }
